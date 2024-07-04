@@ -13,17 +13,17 @@ const MainRoutes = {
     },
     {
       name: 'UsersPage',
-      path: '/users',
+      path: '/setting/users',
       component: () => import('@/views/pages/users/Index.vue')
     },
     {
       name: 'RolesPage',
-      path: '/roles',
+      path: '/setting/roles',
       component: () => import('@/views/pages/roles/Index.vue')
     },
     {
       name: 'SystemsPage',
-      path: '/system',
+      path: '/setting/system',
       component: () => import('@/views/pages/system/Index.vue')
     },
   ]

@@ -1,12 +1,17 @@
 <script setup>
-const props = defineProps({ item: Object, level: Number });
+const props = defineProps({ item: String, level: Number });
 </script>
 
 <template>
   <template v-if="props.level > 0">
-    <component :is="props.item" size="5" fill="currentColor" stroke-width="1.5" class="iconClass"></component>
+    <v-icon icon="mdi-circle" size="5" class="mr32-icon"/>
   </template>
   <template v-else>
-    <component :is="props.item" size="20" stroke-width="1.5" class="iconClass"></component>
+    <v-icon :icon="props.item" size="20" class="mr32-icon"/>
   </template>
 </template>
+<style lang="scss">
+.mr32-icon {
+  margin-right: -32px
+}
+</style>
