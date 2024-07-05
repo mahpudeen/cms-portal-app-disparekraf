@@ -3,9 +3,13 @@
   <v-row>
     <v-col cols="12">
       <UiParentCard title="Data Karyawan">
-        <v-data-table :items="employees" :sort-by="[{ key: 'nama', order: 'asc' }]">
+        <v-data-table :items="employees">
           <template v-slot:item.index="{ index }">
             <span>{{ index + 1 }}</span>
+          </template>
+          <template v-slot:item.roles="{ item }">
+            <!-- Gabungkan semua roles menjadi satu string dan tampilkan -->
+            <span>{{ item.roles.join(', ') }}</span>
           </template>
           <template v-slot:item.aksi="{ item }">
             <v-btn
@@ -14,7 +18,7 @@
               variant="tonal"
               color="#5865f2"
               icon
-              @click="editItem(item)"
+              @click.stop="editForm(item)"
               v-tooltip.bottom="{ content: 'Edit' }"
             >
               <v-icon size="small">mdi-pencil</v-icon>
@@ -46,57 +50,73 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="dialogSuccess" persistent max-width="300px">
-        <v-card>
-          <v-card-title class="text-h5">Sukses</v-card-title>
-          <v-card-text>Item berhasil dihapus.</v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="green" text @click="closeSuccessDialog">OK</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
       </UiParentCard>
     </v-col>
   </v-row>
+  <v-dialog v-model="dialogEdit" persistent max-width="800px">
+    <v-card>
+      <v-card-title class="text-h5">Edit Karyawan</v-card-title>
+      <v-card-text>
+        <v-container>
+          <v-row>
+            <v-col cols="12">
+              <v-text-field v-model="editItem.nama" label="Nama" :disabled="true"></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-text-field v-model="editItem.nik" label="NIK" :disabled="true"></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-text-field v-model="editItem.nip" label="NIP" :disabled="true"></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-select
+                v-model="editItem.roles"
+                :items="roles"
+                label="Roles"
+                multiple
+                attach
+                chips
+                small-chips
+                @change="onRolesChange"
+              ></v-select>
+            </v-col>
+            <v-col cols="12">
+              <v-text-field v-model="editItem.email" label="Email" :disabled="true"></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-select v-model="editItem.bidang" :items="bidang" label="Bidang"></v-select>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="closeEdit">Batal</v-btn>
+        <v-btn color="blue darken-1" text @click="updateItem">Simpan</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, shallowRef, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import BaseBreadcrumb from '../../../components/shared/BaseBreadcrumb.vue';
 import UiParentCard from '../../../components/shared/UiParentCard.vue';
 
 const employees = ref([]);
-const editedIndex = ref(null);
-const dialogSuccess = ref(false);
-const dialog = ref(false);
 const dialogDelete = ref(false);
-const dialogConfirm = ref(false);
-const editedItem = reactive({
+const dialogEdit = ref(false);
+const dialogConfirm = ref(false); // Assuming you need this for another confirmation dialog
+const editItem = reactive({
   nama: '',
   roles: '',
   email: '',
   bidang: '',
-  aksi: true
+  nik: '',
+  nip: ''
 });
-const defaultItem = {
-  nama: '',
-  roles: '',
-  email: '',
-  bidang: '',
-  aksi: true
-};
-
-const headers = [
-  { text: 'No', value: 'index', align: 'center', sortable: false }, // Tambahkan ini
-  { text: 'nama', value: 'nama', align: 'center', sortable: false },
-  { text: 'Roles', value: 'roles', align: 'center' },
-  { text: 'Email', value: 'email', align: 'center' },
-  { text: 'Bidang', value: 'bidang', align: 'center' },
-  { text: 'aksi', value: 'aksi', align: 'center', sortable: false }
-];
 const page = ref({ title: 'Employee Management' });
-const breadcrumbs = shallowRef([
+const breadcrumbs = ref([
   {
     title: 'Internal Settings',
     disabled: false,
@@ -109,76 +129,83 @@ const breadcrumbs = shallowRef([
   }
 ]);
 
-const formTitle = computed(() => (editedIndex.value === -1 ? 'New Employee' : 'Edit Employee'));
-
 const initialize = () => {
   employees.value = [
-    { nama: 'John Doe', roles: 'Software Engineer', email: 'john.doe@example.com', bidang: 'Engineering', aksi: true },
-    { nama: 'Jane Smith', roles: 'Project Manager', email: 'jane.smith@example.com', bidang: 'Product' },
-    { nama: 'Emma Johnson', roles: 'Designer', email: 'emma.johnson@example.com', bidang: 'Design' },
-    { nama: 'Michael Brown', roles: 'DevOps Engineer', email: 'michael.brown@example.com', bidang: 'IT Operations' },
-    { nama: 'Samantha Davis', roles: 'UX Designer', email: 'samantha.davis@example.com', bidang: 'Design' },
-    { nama: 'Christopher Garcia', roles: 'HR Manager', email: 'christopher.garcia@example.com', bidang: 'Human Resources' },
-    { nama: 'Elizabeth Martinez', roles: 'Sales Manager', email: 'elizabeth.martinez@example.com', bidang: 'Sales' },
-    { nama: 'James Wilson', roles: 'Customer Support Specialist', email: 'james.wilson@example.com', bidang: 'Customer Service' },
-    { nama: 'John Doe', roles: 'Software Engineer', email: 'john.doe@example.com', bidang: 'Engineering' },
-    { nama: 'Jane Smith', roles: 'Project Manager', email: 'jane.smith@example.com', bidang: 'Product' },
-    { nama: 'Emma Johnson', roles: 'Designer', email: 'emma.johnson@example.com', bidang: 'Design' },
-    { nama: 'Michael Brown', roles: 'DevOps Engineer', email: 'michael.brown@example.com', bidang: 'IT Operations' },
-    { nama: 'Samantha Davis', roles: 'UX Designer', email: 'samantha.davis@example.com', bidang: 'Design' },
-    { nama: 'Christopher Garcia', roles: 'HR Manager', email: 'christopher.garcia@example.com', bidang: 'Human Resources' },
-    { nama: 'Elizabeth Martinez', roles: 'Sales Manager', email: 'elizabeth.martinez@example.com', bidang: 'Sales' },
-    { nama: 'James Wilson', roles: 'Customer Support Specialist', email: 'james.wilson@example.com', bidang: 'Customer Service' }
-  ].map((employee, index) => ({ no: index + 1, ...employee }));
+    { nama: 'John Doe', roles: ['Software Engineer'], email: 'john.doe@example.com', bidang: 'Engineering', aksi: true },
+    { nama: 'Jane Smith', roles: ['Project Manager'], email: 'jane.smith@example.com', bidang: 'Product' },
+    { nama: 'Emma Johnson', roles: ['Designer'], email: 'emma.johnson@example.com', bidang: 'Design' },
+    { nama: 'Michael Brown', roles: ['DevOps Engineer'], email: 'michael.brown@example.com', bidang: 'IT Operations' },
+    { nama: 'Samantha Davis', roles: ['UX Designer'], email: 'samantha.davis@example.com', bidang: 'Design' },
+    { nama: 'Christopher Garcia', roles: ['HR Manager'], email: 'christopher.garcia@example.com', bidang: 'Human Resources' },
+    { nama: 'Elizabeth Martinez', roles: ['Sales Manager'], email: 'elizabeth.martinez@example.com', bidang: 'Sales' },
+    { nama: 'James Wilson', roles: ['Customer Support Specialist'], email: 'james.wilson@example.com', bidang: 'Customer Service' },
+    { nama: 'John Doe', roles: ['Software Engineer'], email: 'john.doe@example.com', bidang: 'Engineering' },
+    { nama: 'Jane Smith', roles: ['Project Manager'], email: 'jane.smith@example.com', bidang: 'Product' },
+    { nama: 'Emma Johnson', roles: ['Designer'], email: 'emma.johnson@example.com', bidang: 'Design' },
+    { nama: 'Michael Brown', roles: ['DevOps Engineer'], email: 'michael.brown@example.com', bidang: 'IT Operations' },
+    { nama: 'Samantha Davis', roles: ['UX Designer'], email: 'samantha.davis@example.com', bidang: 'Design' },
+    { nama: 'Christopher Garcia', roles: ['HR Manager'], email: 'christopher.garcia@example.com', bidang: 'Human Resources' },
+    { nama: 'Elizabeth Martinez', roles: ['Sales Manager'], email: 'elizabeth.martinez@example.com', bidang: 'Sales' },
+    { nama: 'James Wilson', roles: ['Customer Support Specialist'], email: 'james.wilson@example.com', bidang: 'Customer Service' }
+].map((employee, index) => ({ no: index + 1, ...employee }));
 };
+const roles = computed(() => [...new Set(employees.value.map((employee) => employee.roles))]);
+const bidang = computed(() => [...new Set(employees.value.map((employee) => employee.bidang))]);
 
 onMounted(initialize);
-function deleteItem(item) {
-  console.log(item);
-  editedIndex.value = employees.value.indexOf(item);
-  Object.assign(editedItem, item);
-  dialogDelete.value = true;
-}
 
-function deleteItemConfirm() {
-  // Validasi editedIndex
-  if (editedIndex.value !== null && editedIndex.value >= 0 && editedIndex.value < employees.value.length) {
-    // Melakukan penghapusan
-    employees.value.splice(editedIndex.value, 1);
-    // Menampilkan dialog sukses
-    dialogSuccess.value = false;
-    // Menutup dialog penghapusan
-    closeDelete();
-    // Mengatur ulang editedIndex
-    editedIndex.value = null;
-  } else {
-    // Handle kasus di mana editedIndex tidak valid
-    console.error('Index tidak valid atau tidak ada item yang dipilih untuk dihapus.');
+function deleteItem(item) {
+  const index = employees.value.indexOf(item);
+  if (index !== -1) {
+    editItem.nama = item.nama; // Assuming 'nama' is unique or used as a key
+    dialogDelete.value = true;
   }
 }
 
-function close() {
-  dialog.value = false;
-  Object.assign(editedItem, defaultItem);
-  editedIndex.value = -1;
+function deleteItemConfirm() {
+  const index = employees.value.findIndex((employee) => employee.nama === editItem.nama);
+  if (index !== -1) {
+    employees.value.splice(index, 1);
+    dialogDelete.value = false;
+    resetEditItem();
+  } else {
+    console.error('Item not found');
+  }
 }
 
 function closeDelete() {
   dialogDelete.value = false;
-  Object.assign(editedItem, defaultItem);
-  editedIndex.value = -1;
+  resetEditItem();
 }
 
-function closeSuccessDialog() {
-  dialogSuccess.value = false;
+function editForm(item) {
+  Object.assign(editItem, item);
+  dialogEdit.value = true;
 }
 
-function save() {
-  if (editedIndex.value > -1) {
-    Object.assign(employees.value[editedIndex.value], editedItem);
+function updateItem() {
+  const index = employees.value.findIndex((employee) => employee.nama === editItem.nama);
+  if (index !== -1) {
+    Object.assign(employees.value[index], editItem);
+    dialogEdit.value = false;
+    resetEditItem();
   } else {
-    employees.value.push(Object.assign({}, editedItem));
+    console.error('Item not found');
   }
-  close();
+}
+
+function resetEditItem() {
+  Object.keys(editItem).forEach((key) => {
+    editItem[key] = '';
+  });
+}
+
+function onRolesChange(newValue) {
+  console.log(editItem)
+  editItem.roles = newValue;
+}
+
+function closeEdit() {
+  dialogEdit.value = false;
 }
 </script>
