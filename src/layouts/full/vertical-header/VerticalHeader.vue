@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useCustomizerStore } from '../../../stores/customizer';
-// Icon Imports
-import { BellIcon, SettingsIcon, SearchIcon, Menu2Icon } from 'vue-tabler-icons';
+import { SettingsIcon, Menu2Icon } from 'vue-tabler-icons';
+import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useDisplay } from 'vuetify'
+
+const { mobile } = useDisplay()
+const route = useRoute();
+const title = ref(route.meta.title);
+const breadcrumbs:any = route.meta.breadcrumbs;
 
 // dropdown imports
-import NotificationDD from './NotificationDD.vue';
 import ProfileDD from './ProfileDD.vue';
-import Searchbar from './SearchBarPanel.vue';
 
 const customizer = useCustomizerStore();
-const showSearch = ref(false);
-function searchbox() {
-  showSearch.value = !showSearch.value;
-}
 </script>
 
 <template>
@@ -40,6 +40,29 @@ function searchbox() {
     >
       <Menu2Icon size="20" stroke-width="1.5" />
     </v-btn>
+
+    <v-col v-if="!mobile">
+      <v-card variant="flat" class="px-4 py-3">
+        <v-row no-gutters class="align-center">
+          <v-col>
+            <h3 class="text-h3">{{ title }}</h3>
+            <v-breadcrumbs :items="breadcrumbs" class="text-h5 pa-1">
+              <template v-slot:divider>
+                <div class="d-flex align-center">
+                  <ChevronRightIcon size="17" />
+                </div>
+              </template>
+              <template v-slot:prepend>
+                <v-icon size="small" icon="mdi-home" class="text-secondary mr-2"></v-icon>
+                <div class="d-flex align-center">
+                  <ChevronRightIcon size="17" />
+                </div>
+              </template>
+            </v-breadcrumbs>
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-col>
 
     <v-spacer />
 
