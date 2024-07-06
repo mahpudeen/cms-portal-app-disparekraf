@@ -1,7 +1,7 @@
 <template>
   <div class="logo">
     <RouterLink to="/">
-      <img height="50" src="/img/jaya-raya-logo.png" alt="">
+      <img height="35" src="/img/jaya-raya-logo.png" alt="">
     </RouterLink>
   </div>
 </template>

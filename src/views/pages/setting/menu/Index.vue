@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref, shallowRef } from 'vue';
 
-import BaseBreadcrumb from '../../../components/shared/BaseBreadcrumb.vue';
-import UiParentCard from '../../../components/shared/UiParentCard.vue';
+import BaseBreadcrumb from '@/components/shared/BaseBreadcrumb.vue';
+import UiParentCard from '@/components/shared/UiParentCard.vue';
+
 
 const page = ref({ title: 'System Page' });
 const breadcrumbs = shallowRef([
   {
     title: 'Internal Settings',
-    disabled: false,
+    disabled: true,
     href: '#'
   },
   {

@@ -3,6 +3,16 @@ import MainRoutes from './MainRoutes';
 import AuthRoutes from './AuthRoutes';
 import { useAuthStore } from '@/stores/auth';
 
+const modules = import.meta.glob('../views/**/*.ts');
+
+// Import each module and collect routes
+for (const path in modules) {
+  if (Object.prototype.hasOwnProperty.call(modules, path)) {
+    const routeModule: any = await modules[path]();
+    MainRoutes.children.push(...routeModule.default);
+  }
+}
+
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -11,7 +21,7 @@ export const router = createRouter({
       component: () => import('@/views/pages/maintenance/error/Error404Page.vue')
     },
     MainRoutes,
-    AuthRoutes
+    AuthRoutes,
   ]
 });
 
