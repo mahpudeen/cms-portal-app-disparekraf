@@ -100,8 +100,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import BaseBreadcrumb from '../../../components/shared/BaseBreadcrumb.vue';
-import UiParentCard from '../../../components/shared/UiParentCard.vue';
+import BaseBreadcrumb from '@/components/shared/BaseBreadcrumb.vue';
+import UiParentCard from '@/components/shared/UiParentCard.vue';
 
 const employees = ref([]);
 const dialogDelete = ref(false);

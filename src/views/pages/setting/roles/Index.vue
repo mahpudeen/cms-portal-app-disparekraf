@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, shallowRef } from 'vue';
 
-import BaseBreadcrumb from '../../../components/shared/BaseBreadcrumb.vue';
-import UiParentCard from '../../../components/shared/UiParentCard.vue';
+import BaseBreadcrumb from '@/components/shared/BaseBreadcrumb.vue';
+import UiParentCard from '@/components/shared/UiParentCard.vue';
 
 const page = ref({ title: 'Roles Page' });
 const breadcrumbs = shallowRef([

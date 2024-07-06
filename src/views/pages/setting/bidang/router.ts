@@ -1,4 +1,3 @@
-
 const routes: any[] = [
     {
         path: '/setting/bidang',
@@ -7,17 +6,17 @@ const routes: any[] = [
         meta: {
             requiresAuth: true,
             title: 'Bidang List',
-            breadcrumbs : [
+            breadcrumbs: [
                 {
                     title: 'Internal Settings',
                     disabled: true,
                     href: '#'
-                  },
-                  {
+                },
+                {
                     title: 'Bidang List',
                     disabled: true,
                     href: '#'
-                  }
+                }
             ]
         }
     }
