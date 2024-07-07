@@ -9,7 +9,23 @@ const MainRoutes = {
     {
       name: 'LandingPage',
       path: '/',
-      component: () => import('@/views/dashboards/default/DefaultDashboard.vue')
+      component: () => import('@/views/dashboards/default/DefaultDashboard.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Dashboard Welcome',
+        breadcrumbs: [
+            {
+                title: 'Dashboard',
+                disabled: true,
+                href: '#'
+            },
+            {
+                title: 'Welcome',
+                disabled: true,
+                href: '#'
+            }
+        ]
+    }
     }
   ]
 };

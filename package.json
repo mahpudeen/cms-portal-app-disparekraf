@@ -18,7 +18,7 @@
     "@tiptap/vue-3": "2.2.2",
     "@tsconfig/node20": "^20.1.2",
     "apexcharts": "3.45.2",
-    "axios": "1.6.7",
+    "axios": "^1.6.7",
     "axios-mock-adapter": "^1.22.0",
     "chance": "1.1.11",
     "date-fns": "3.3.1",
@@ -34,6 +34,7 @@
     "vue3-apexcharts": "1.5.2",
     "vue3-perfect-scrollbar": "1.6.1",
     "vue3-print-nb": "0.1.4",
+    "vue3-toastify": "^0.2.2",
     "vuetify": "3.5.4",
     "webpack-plugin-vuetify": "^3.0.1",
     "yup": "1.3.3"
