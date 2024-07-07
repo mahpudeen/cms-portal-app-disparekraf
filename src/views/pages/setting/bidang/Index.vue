@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { toast }  from 'vue3-toastify';
 const search = ref('');
+function showToast() {
+  toast.success("berhasil")
+}
 
 </script>
 
@@ -10,22 +14,25 @@ const search = ref('');
       <v-card variant="flat">
         <v-card-item>
           <div class="d-sm-flex align-center justify-space-between">
-            <div class="search-width">
-              <v-text-field
-                v-model="search"
-                label="Search"
-                density="compact"
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                hide-details
-                single-line
-              ></v-text-field>
-            </div>
-            <slot name="action">
+              <v-row>
+                <v-col cols="12" sm="4">
+                  <v-text-field
+                    v-model="search"
+                    label="Search"
+                    density="compact"
+                    prepend-inner-icon="mdi-magnify"
+                    variant="outlined"
+                    hide-details
+                    single-line
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <slot name="action">
               <v-btn
                 prepend-icon="mdi-plus-box"
                 color="primary"
                 elevation="0"
+                @click="showToast"
               >
                 Add
               </v-btn>

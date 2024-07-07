@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue';
+import { ref } from 'vue';
+import { useAuthStore } from '@/stores/auth';
 import { useCustomizerStore } from '../../../stores/customizer';
-import sidebarItems from './sidebarItem';
 
 import NavGroup from './NavGroup/NavGroup.vue';
 import NavItem from './NavItem/NavItem.vue';
@@ -9,7 +9,27 @@ import NavCollapse from './NavCollapse/NavCollapse.vue';
 import Logo from '../logo/LogoMain.vue';
 
 const customizer = useCustomizerStore();
-const sidebarMenu = shallowRef(sidebarItems);
+const { menu } = useAuthStore();
+// const sidebarMenu = shallowRef(sidebarItems);
+const sidebarMenu:any = ref([
+  { header: 'Dashboard' },
+  {
+    title: 'Welcome',
+    icon: 'mdi-monitor-dashboard',
+    to: '/'
+  },
+]);
+if (menu && menu.length > 0) {
+  // Iterate over menu items and push them to sidebarMenu
+  menu.forEach((item:any) => {
+    sidebarMenu.value.push({ divider: true });
+    sidebarMenu.value.push({ header: item.title });
+    item.menu.forEach((sub_item:any) => {
+      sidebarMenu.value.push(sub_item);
+    });
+  });
+}
+
 </script>
 
 <template>

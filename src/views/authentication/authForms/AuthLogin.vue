@@ -9,13 +9,11 @@ const valid = ref(false);
 const show1 = ref(false);
 //const logform = ref();
 const password = ref('admin123');
-const username = ref('info@codedthemes.com');
+const username = ref('admin');
 const passwordRules = ref([
   (v: string) => !!v || 'Password is required',
   (v: string) => (v && v.length <= 10) || 'Password must be less than 10 characters'
 ]);
-const emailRules = ref([(v: string) => !!v || 'E-mail is required', (v: string) => /.+@.+\..+/.test(v) || 'E-mail must be valid']);
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function validate(values: any, { setErrors }: any) {
   const authStore = useAuthStore();
@@ -27,7 +25,6 @@ function validate(values: any, { setErrors }: any) {
   <Form @submit="validate" class="mt-7 loginForm" v-slot="{ errors, isSubmitting }">
     <v-text-field
       v-model="username"
-      :rules="emailRules"
       label="Email Address / NIK"
       class="mt-4 mb-8"
       required

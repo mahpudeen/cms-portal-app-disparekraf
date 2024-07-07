@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { useCustomizerStore } from '../../../stores/customizer';
 import { SettingsIcon, Menu2Icon } from 'vue-tabler-icons';
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDisplay } from 'vuetify'
 
 const { mobile } = useDisplay()
 const route = useRoute();
 const title = ref(route.meta.title);
-const breadcrumbs:any = route.meta.breadcrumbs;
+const breadcrumbs:any = ref(route.meta.breadcrumbs);
+
+watchEffect(() => {
+  title.value = route.meta.title;
+  breadcrumbs.value = route.meta.breadcrumbs;
+});
 
 // dropdown imports
 import ProfileDD from './ProfileDD.vue';

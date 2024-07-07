@@ -17,7 +17,10 @@ interface ResponseBody {
 }
 
 function fakeBackend() {
-  const users: User[] = [{ id: 1, username: 'info@codedthemes.com', password: 'admin123', firstName: 'Codedthemes', lastName: '.com' }];
+  const users: User[] = [
+    { id: 1, username: 'admin', password: 'admin123', firstName: 'Super', lastName: 'Admin' },
+    { id: 2, username: 'admin2', password: 'admin123', firstName: 'Admin', lastName: 'External' },
+  ];
   const realFetch = window.fetch;
 
   window.fetch = function (url: string, opts: { method: string; headers: { [key: string]: string }; body?: string }) {
@@ -44,13 +47,96 @@ function fakeBackend() {
         const { username, password } = body();
         const user = users.find((x) => x.username === username && x.password === password);
         if (!user) return error('Username or password is incorrect');
-        return ok({
-          id: user.id,
-          username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          token: 'fake-jwt-token'
-        });
+        const menu = [
+          {
+            title : 'Internal Settings',
+            menu : [
+              {
+                title: 'Users',
+                icon: 'mdi-account-circle',
+                to: '/setting/users'
+              },
+              {
+                title: 'Bidang',
+                icon: 'mdi-account-tie-outline',
+                to: '/setting/bidang'
+              },
+              {
+                title: 'Roles',
+                icon: 'mdi-account-multiple',
+                to: '/setting/roles'
+              },
+              {
+                title: 'Menu',
+                icon: 'mdi-menu',
+                to: '/setting/menu'
+              },
+            ]
+          },
+          {
+            title : 'CMS Jacation',
+            menu : [
+              {
+                title: 'Dashboard',
+                icon: 'mdi-view-dashboard',
+                to: '/setting/users'
+              },
+              {
+                title: 'Articles',
+                icon: 'mdi-post',
+                children: [
+                  {
+                    title: 'Categories',
+                    to: '/users'
+                  },
+                  {
+                    title: 'Articles',
+                    to: '/roles'
+                  },
+                  {
+                    title: 'Reviews',
+                    to: '/system'
+                  }
+                ]
+              },
+            ]
+          }
+        ]
+        const menu2 = [
+          {
+            title : 'Internal Settings',
+            menu : [
+              {
+                title: 'Users',
+                icon: 'mdi-account-circle',
+                to: '/setting/users'
+              },
+              {
+                title: 'Bidang',
+                icon: 'mdi-account-tie-outline',
+                to: '/setting/bidang'
+              },
+              {
+                title: 'Roles',
+                icon: 'mdi-account-multiple',
+                to: '/setting/roles'
+              },
+              {
+                title: 'Menu',
+                icon: 'mdi-menu',
+                to: '/setting/menu'
+              },
+            ]
+          }
+        ]
+        const data:any = {
+          user : {
+            username: username,
+          },
+          token: 'fake-jwt-token',
+          menu : username == 'admin'? menu:menu2
+        }
+        return ok(data);
       }
 
       function getUsers() {
