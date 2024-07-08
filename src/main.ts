@@ -4,7 +4,10 @@ import App from './App.vue';
 import { router } from './router';
 import vuetify from './plugins/vuetify';
 import axios from './plugins/axios';
-import 'vue3-toastify/dist/index.css';
+import tooltip from "./plugins/tooltip.js";
+import VueSweetalert2 from 'vue-sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
+import 'sweetalert2/dist/sweetalert2.min.css'
 import '@/scss/style.scss';
 import PerfectScrollbar from 'vue3-perfect-scrollbar';
 import VueApexCharts from 'vue3-apexcharts';
@@ -17,6 +20,9 @@ import print from 'vue3-print-nb';
 
 const app = createApp(App);
 app.config.globalProperties.$axios = axios;
+app.use(VueSweetalert2)
+app.config.globalProperties.$swal = VueSweetalert2;
+app.directive("tooltip", tooltip);
 fakeBackend();
 app.use(router);
 app.use(PerfectScrollbar);
