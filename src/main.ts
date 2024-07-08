@@ -7,8 +7,8 @@ import axios from './plugins/axios';
 import tooltip from "./plugins/tooltip.js";
 import VueSweetalert2 from 'vue-sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
-import 'sweetalert2/dist/sweetalert2.min.css'
 import '@/scss/style.scss';
+import 'uno.css'
 import PerfectScrollbar from 'vue3-perfect-scrollbar';
 import VueApexCharts from 'vue3-apexcharts';
 import VueTablerIcons from 'vue-tabler-icons';

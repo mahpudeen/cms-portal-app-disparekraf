@@ -191,21 +191,21 @@ const detailData = (item) => {
                                 <td>{{ props.item.nama }}</td>
                                 <td class="btn-td">
                                     <button 
-                                        class="btn-detail m-1" 
+                                        class="btn-detail" 
                                         v-tooltip="'Detail'"
                                         @click="detailData(props.item)"
                                     >
                                         <v-icon color="white">mdi-file</v-icon>
                                     </button>
                                     <button 
-                                        class="btn-edit m-1"
+                                        class="btn-edit"
                                         v-tooltip="'Edit'"
                                         @click="editData(props.item)"
                                     >
                                         <v-icon color="white">mdi-pencil</v-icon>
                                     </button>
                                     <button 
-                                        class="btn-delete m-1"
+                                        class="btn-delete"
                                         v-tooltip="'Delete'"
                                         @click="deleteData(props.item)"
                                     >
