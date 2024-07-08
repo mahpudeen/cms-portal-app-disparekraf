@@ -1,6 +1,7 @@
 <script setup>
 import { ref, inject } from 'vue';
 import { toast } from 'vue3-toastify';
+import DetailRow from '@/components/DetailRow.vue';
 const search = ref('');
 
 const Swal = inject('$swal')
@@ -236,10 +237,8 @@ const detailData = (item) => {
                     <v-divider :class="dialogTitle=='Detail Bidang'?'':'mb-4'"></v-divider>
 
                     <v-card-text v-if="dialogTitle=='Detail Bidang'">
-                        <v-label>Kode:</v-label>
-                        <p>{{ data.kode }}</p>
-                        <v-label>Name:</v-label>
-                        <p>{{ data.nama }}</p>
+                        <DetailRow :name="'Kode'" :value="data.kode"/>
+                        <DetailRow :name="'Name'" :value="data.nama"/>
                     </v-card-text>
                     <v-card-text v-else>
                         <v-text-field 
