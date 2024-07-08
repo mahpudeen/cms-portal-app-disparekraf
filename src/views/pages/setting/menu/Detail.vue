@@ -3,6 +3,7 @@ import { ref, inject } from 'vue';
 import { toast } from 'vue3-toastify';
 import DetailRow from '@/components/DetailRow.vue';
 const search = ref('');
+const expanded = ref([]);
 
 const Swal = inject('$swal')
 
@@ -12,12 +13,34 @@ const menu = [
         "nama": "Internal Setting",
         "path": "/internal-setting",
         "status": "1",
+        "children": [
+            {
+                "kode": "cms-setting-general",
+                "nama": "General Setting",
+                "path": "/cms-setting-general",
+                "status": "1",
+            }
+        ]
     },
     {
         "kode": "cms-jacation",
         "nama": "CMS Jacation",
         "path": "/cms-jacation",
         "status": "1",
+        "children": [
+            {
+                "kode": "cms-tour-category",
+                "nama": "Tour Category",
+                "path": "/cms-tour-category",
+                "status": "1",
+            },
+            {
+                "kode": "cms-tour-type",
+                "nama": "Tour Type",
+                "path": "/cms-tour-type",
+                "status": "1",
+            }
+        ]
     },
     {
         "kode": "cms-tour",
@@ -212,6 +235,9 @@ const detailData = (item) => {
                         :loading="loading" 
                         item-value="name" 
                         @update:options="loadItems"
+                        :expanded.sync="expanded"
+                        item-key="name"
+                        show-expand
                     >
                         <template v-slot:item="props, idx">
                             <tr style="height:48px">
@@ -260,6 +286,21 @@ const detailData = (item) => {
                                     </button>
                                 </td>
                             </tr>
+                        </template>
+
+                        <template v-slot:expanded-item="{ item }">   
+                            <td>
+                            <p v-for="source in item.children">{{ source.kode }}</p>
+                            </td>
+                            <td>
+                            <p v-for="source in item.children">{{ source.nama }}</p>
+                            </td>
+                            <td>
+                            <p v-for="source in item.children">{{ source.status }}</p>
+                            </td>
+                            <td>
+                            <p v-for="source in item.children">{{ source.path }}</p>
+                            </td>
                         </template>
                     </v-data-table-server>
                 </v-card-item>

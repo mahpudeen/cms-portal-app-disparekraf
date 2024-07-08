@@ -4,6 +4,7 @@ import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import { PurpleTheme } from '@/theme/LightTheme';
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
+// import 'vuetify/styles'
 
 export default createVuetify({
   components,
