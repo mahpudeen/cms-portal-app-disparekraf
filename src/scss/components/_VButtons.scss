@@ -43,6 +43,24 @@
   background-color: rgb(var(--v-theme-error)) !important;
   color: $white !important;
 }
+.btn-explore {
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  background-color: rgb(var(--v-theme-info)) !important;
+  color: $white !important;
+}
+.btn-explore-route {
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  background-color: rgb(var(--v-theme-info)) !important;
+  color: $white !important;
+}
 .btn-td {
   text-align: center;
   display: flex;

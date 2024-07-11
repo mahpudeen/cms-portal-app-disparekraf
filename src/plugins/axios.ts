@@ -18,6 +18,7 @@ axiosInstance.interceptors.request.use(
     const { token, logout } = useAuthStore();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['X-Channel'] = token;
     } else (
       logout()
     )

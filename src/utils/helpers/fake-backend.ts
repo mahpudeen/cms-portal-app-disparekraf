@@ -133,7 +133,7 @@ function fakeBackend() {
           user : {
             username: username,
           },
-          token: 'fake-jwt-token',
+          token: 'disparekraf_api',
           menu : username == 'admin'? menu:menu2
         }
         return ok(data);
