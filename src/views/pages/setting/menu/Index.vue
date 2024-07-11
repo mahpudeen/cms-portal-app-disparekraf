@@ -1,81 +1,30 @@
 <script setup>
-import { ref, inject } from 'vue';
+import { ref, inject, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DetailRow from '@/components/DetailRow.vue';
-const search = ref('');
+import axios from '@/plugins/axios';
 
 const Swal = inject('$swal')
 
-const menu = [
-    {
-        "kode": "internal-setting",
-        "nama": "Internal Setting",
-        "path": "/internal-setting",
-        "status": "1",
-    },
-    {
-        "kode": "cms-jacation",
-        "nama": "CMS Jacation",
-        "path": "/cms-jacation",
-        "status": "1",
-    },
-    {
-        "kode": "cms-tour",
-        "nama": "CMS Tour",
-        "path": "/cms-tour",
-        "status": "0",
-    }
-];
-
 const status_items = [
     {
-        "value": "1",
+        "value": 1,
         "text": "Active",
     },
     {
-        "value": "0",
+        "value": 0,
         "text": "Inactive",
     }
 ];
 
-const statuses = ref('')
-
-const FakeAPI = {
-    async fetch({ page, itemsPerPage, sortBy }) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const start = (page - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                const items = menu.slice();
-
-                if (sortBy.length) {
-                    const sortKey = sortBy[0].key;
-                    const sortOrder = sortBy[0].order;
-                    items.sort((a, b) => {
-                        const aValue = a[sortKey];
-                        const bValue = b[sortKey];
-                        return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
-                    });
-                }
-
-                const paginated = items.slice(start, end);
-
-                resolve({ items: paginated, total: items.length });
-            }, 500);
-        });
-    },
-};
-
-const itemsPerPage = ref(5);
 const headers = ref([
     {
-        title: 'Kode Menu',
-        width: "20%",
+        title: 'Nama Modul',
         class: 'grey--text text--darken-4',
-        sortable: false,
+        sortable: false
     },
     {
-        title: 'Nama Menu',
+        title: 'Url Modul',
         class: 'grey--text text--darken-4',
         sortable: false
     },
@@ -92,25 +41,43 @@ const headers = ref([
     },
 ]);
 const serverItems = ref([]);
+const index_items = ref([]);
 const loading = ref(true);
+const itemsPerPage = ref(10);
 const totalItems = ref(0);
+const search = ref('');
 
-const loadItems = ({ page, itemsPerPage, sortBy }) => {
+const loadItems = async ({ page, itemsPerPage, sortBy }) => {
     loading.value = true;
-    FakeAPI.fetch({ page, itemsPerPage, sortBy }).then(({ items, total }) => {
-        serverItems.value = items;
-        totalItems.value = total;
+    axios.get(`/modules`).then(result => {
+        console.log(result);
+        serverItems.value = result.data
+        totalItems.value = result.data.length;
         loading.value = false;
-    });
+        let data = ref([])
+        for (let index = 1; index < result.data.length+2; index++) {
+            data.value.push(
+                {
+                    "value": index,
+                    "text": index.toString()
+                }
+            )
+        }
+        index_items.value = data.value
+    })
 };
 
 const data = ref({
-    kode: "",
-    nama: "",
+    title: "",
+    url: "",
+    status: null,
+    index: null,
 })
 const error = ref({
-    kode: "",
-    nama: "",
+    title: "",
+    url: "",
+    status: null,
+    index: null,
 })
 const dialogModal = ref(false);
 const dialogTitle = ref('');
@@ -119,37 +86,79 @@ const addData = () => {
     dialogModal.value = true;
     dialogTitle.value = "Add Menu"
     data.value = {
-        kode: "",
-        nama: "",
+        title: "",
+        url: "",
+        status: null,
+        index: null,
     }
-}
-const saveData = () => {
-    error.value = {
-        kode: "",
-        nama: "",
-    }
-    if (data.value.kode === "" ) {
-        error.value.kode = "Kode wajib diisi"
-        return;
-    }
-    if (data.value.nama === "" ) {
-        error.value.nama = "Nama wajib diisi"
-        return;
-    }
-
-    // save item to server
-    serverItems.value.push({...data.value });
-    toast.success("Berhasil menyimpan data", {
-        position: "top-right",
-        duration: 3000,
-        theme: "colored",
-    });
-    dialogModal.value = false;
 }
 const editData = (item) => {
     dialogModal.value = true;
     dialogTitle.value = "Edit Menu"
     data.value = {...item }
+}
+
+const detailData = (item) => {
+    data.value = item
+    dialogModal.value = true;
+    dialogTitle.value = "Detail Menu"
+}
+const saveData = () => {
+    error.value = {
+        title: "",
+        url: "",
+        status: null,
+        index: null,
+    }
+    if (data.value.title === "" ) {
+        error.value.title = "Nama wajib diisi"
+        return;
+    }
+    if (data.value.url === "" ) {
+        error.value.url = "Url wajib diisi"
+        return;
+    }
+    if (data.value.status === null ) {
+        error.value.status = "Status wajib diisi"
+        return;
+    }
+    if (data.value.index === null ) {
+        error.value.index = "Index wajib diisi"
+        return;
+    }
+
+    if (dialogTitle.value == "Add Menu") {
+        axios.post(`/modules`, data.value).then(result => {
+            toast.success("Berhasil menyimpan data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+            loadItems(1, itemsPerPage, 'id')
+        }).catch(err => {
+            toast.error("Error menyimpan data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+        })
+    } else {
+        axios.put(`/modules/`+data.value.id, data.value).then(result => {
+            toast.success("Berhasil mengupdate data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+            loadItems(1, itemsPerPage, 'id')
+        }).catch(err => {
+            toast.error("Error mengupdate data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+        })
+    }
+    dialogModal.value = false;
 }
 const deleteData = (item) => {
     Swal.fire({
@@ -164,16 +173,22 @@ const deleteData = (item) => {
         cancelButtonColor: "yellow", //
     }).then((result) => {
         if (result.isConfirmed) {
-            // delete item from server
-            serverItems.value = serverItems.value.filter((itm) => itm.kode!== item.kode);
-            Swal.fire("Berhasil menghapus data");
+            axios.delete(`/modules/`+item.id).then(result => {
+                toast.success("Berhasil menghapus data", {
+                    position: "top-right",
+                    duration: 3000,
+                    theme: "colored",
+                });
+            loadItems(1, itemsPerPage, 'id')
+            }).catch(err => {
+                toast.error("Error mengupdate data", {
+                    position: "top-right",
+                    duration: 3000,
+                    theme: "colored",
+                });
+            })
         }
     });
-}
-const detailData = (item) => {
-    data.value = item
-    dialogModal.value = true;
-    dialogTitle.value = "Detail Menu"
 }
 </script>
 
@@ -207,7 +222,8 @@ const detailData = (item) => {
                 <v-card-item>
                     <v-data-table-server 
                         v-model:items-per-page="itemsPerPage" 
-                        :headers="headers" :items="serverItems"
+                        :headers="headers" 
+                        :items="serverItems"
                         :items-length="totalItems" 
                         :loading="loading" 
                         item-value="name" 
@@ -215,10 +231,10 @@ const detailData = (item) => {
                     >
                         <template v-slot:item="props, idx">
                             <tr style="height:48px">
-                                <td>{{ props.item.kode }}</td>
-                                <td>{{ props.item.nama }}</td>
+                                <td>{{ props.item.title }}</td>
+                                <td>{{ props.item.url }}</td>
                                 <td>
-                                    <div v-if="props.item.status == '1' ">
+                                    <div v-if="props.item.status == 1 ">
                                         <v-chip color="green" class="bg-green" density="compact" variant="flat">
                                             Active
                                         </v-chip>
@@ -231,7 +247,7 @@ const detailData = (item) => {
                                 </td>
                                 <td class="btn-td">
                                     <router-link 
-                                        to="/setting/menu/detail/123"
+                                        :to="`/setting/menu/detail/`+props.item.id"
                                         class="btn-explore-route" 
                                         v-tooltip="'Explore'"
                                     >
@@ -283,34 +299,34 @@ const detailData = (item) => {
                     <v-divider :class="dialogTitle=='Detail Menu'?'':'mb-4'"></v-divider>
 
                     <v-card-text v-if="dialogTitle=='Detail Menu'">
-                        <DetailRow :name="'Kode'" :value="data.kode"/>
-                        <DetailRow :name="'Name'" :value="data.nama"/>
+                        <DetailRow :name="'Nama Modul'" :value="data.title"/>
+                        <DetailRow :name="'Url'" :value="data.url"/>
+                        <DetailRow :name="'Status'" :value="data.status == 1 ? 'Active':'Inactive'"/>
+                        <DetailRow :name="'Index'" :value="data.index"/>
                     </v-card-text>
                     <v-card-text v-else>
                         <v-text-field 
-                            v-model="data.kode" 
-                            label="Kode" 
+                            v-model="data.title"
                             density="compact"
                             variant="outlined" 
-                            :error-messages="error.kode"
+                            :error-messages="error.title"
                         >
                             <template v-slot:label>
-                                Kode<span class="text-red">*</span>
+                                Nama Modul<span class="text-red">*</span>
                             </template>
                         </v-text-field>
                         <v-text-field 
-                            v-model="data.nama" 
-                            label="Nama" 
+                            v-model="data.url" 
                             density="compact"
                             variant="outlined" 
-                            :error-messages="error.nama"
+                            :error-messages="error.url"
                         >
                             <template v-slot:label>
-                                Nama<span class="text-red">*</span>
+                                URL<span class="text-red">*</span>
                             </template>
                         </v-text-field>
                         <v-autocomplete
-                            v-model="statuses"
+                            v-model="data.status"
                             :items="status_items"
                             item-title="text"
                             item-value="value"
@@ -319,6 +335,18 @@ const detailData = (item) => {
                         >
                             <template v-slot:label>
                                 Status<span class="text-red">*</span>
+                            </template>
+                        </v-autocomplete>
+                        <v-autocomplete
+                            v-model="data.index"
+                            :items="index_items"
+                            item-title="text"
+                            item-value="value"
+                            density="compact"
+                            variant="outlined"
+                        >
+                            <template v-slot:label>
+                                Index<span class="text-red">*</span>
                             </template>
                         </v-autocomplete>
                     </v-card-text>

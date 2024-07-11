@@ -1,104 +1,39 @@
 <script setup>
-import { ref, inject } from 'vue';
+import { ref, inject, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DetailRow from '@/components/DetailRow.vue';
-const search = ref('');
-const expanded = ref([]);
+import axios from '@/plugins/axios';
+import { useRoute } from 'vue-router';
+const route = useRoute();
 
 const Swal = inject('$swal')
 
-const menu = [
-    {
-        "kode": "internal-setting",
-        "nama": "Internal Setting",
-        "path": "/internal-setting",
-        "status": "1",
-        "children": [
-            {
-                "kode": "cms-setting-general",
-                "nama": "General Setting",
-                "path": "/cms-setting-general",
-                "status": "1",
-            }
-        ]
-    },
-    {
-        "kode": "cms-jacation",
-        "nama": "CMS Jacation",
-        "path": "/cms-jacation",
-        "status": "1",
-        "children": [
-            {
-                "kode": "cms-tour-category",
-                "nama": "Tour Category",
-                "path": "/cms-tour-category",
-                "status": "1",
-            },
-            {
-                "kode": "cms-tour-type",
-                "nama": "Tour Type",
-                "path": "/cms-tour-type",
-                "status": "1",
-            }
-        ]
-    },
-    {
-        "kode": "cms-tour",
-        "nama": "CMS Tour",
-        "path": "/cms-tour",
-        "status": "0",
-    }
-];
-
 const status_items = [
     {
-        "value": "1",
+        "value": 1,
         "text": "Active",
     },
     {
-        "value": "0",
+        "value": 0,
         "text": "Inactive",
     }
 ];
 
-const statuses = ref('')
-
-const FakeAPI = {
-    async fetch({ page, itemsPerPage, sortBy }) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const start = (page - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                const items = menu.slice();
-
-                if (sortBy.length) {
-                    const sortKey = sortBy[0].key;
-                    const sortOrder = sortBy[0].order;
-                    items.sort((a, b) => {
-                        const aValue = a[sortKey];
-                        const bValue = b[sortKey];
-                        return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
-                    });
-                }
-
-                const paginated = items.slice(start, end);
-
-                resolve({ items: paginated, total: items.length });
-            }, 500);
-        });
-    },
-};
-
-const itemsPerPage = ref(5);
 const headers = ref([
     {
-        title: 'Kode Menu',
-        width: "20%",
+        width: "2%",
+        title: '',
         class: 'grey--text text--darken-4',
-        sortable: false,
+        sortable: false
     },
     {
+        width: "40%",
         title: 'Nama Menu',
+        class: 'grey--text text--darken-4',
+        sortable: false
+    },
+    {
+        title: 'Path Menu',
         class: 'grey--text text--darken-4',
         sortable: false
     },
@@ -115,25 +50,60 @@ const headers = ref([
     },
 ]);
 const serverItems = ref([]);
+const index_items = ref([]);
+const parent_items = ref([]);
 const loading = ref(true);
+const isParent = ref(true);
+const itemsPerPage = ref(10);
 const totalItems = ref(0);
+const search = ref('');
 
-const loadItems = ({ page, itemsPerPage, sortBy }) => {
+const loadItems = async ({ page, itemsPerPage, sortBy }) => {
     loading.value = true;
-    FakeAPI.fetch({ page, itemsPerPage, sortBy }).then(({ items, total }) => {
-        serverItems.value = items;
-        totalItems.value = total;
+    axios.get(`/menus/bymodule/`+route.params.id).then(result => {
+        serverItems.value = result.data
+        let dataParent = ref([])
+
+        serverItems.value.forEach(element => {
+            element.showChildren = false;
+            dataParent.value.push(
+                {
+                    "value": element.id,
+                    "text": element.title
+                }
+            )
+        });
+        parent_items.value = dataParent.value
+        totalItems.value = result.data.length;
         loading.value = false;
-    });
+        let data = ref([])
+        for (let index = 1; index < result.data.length+2; index++) {
+            data.value.push(
+                {
+                    "value": index,
+                    "text": index.toString()
+                }
+            )
+        }
+        index_items.value = data.value
+    })
 };
 
 const data = ref({
-    kode: "",
-    nama: "",
+    title: "",
+    modules_id: route.params.id,
+    path: "",
+    icon: "",
+    status: null,
+    parent_id: null,
 })
 const error = ref({
-    kode: "",
-    nama: "",
+    title: "",
+    modules_id: route.params.id,
+    path: "",
+    icon: "",
+    status: null,
+    parent_id: null,
 })
 const dialogModal = ref(false);
 const dialogTitle = ref('');
@@ -142,37 +112,83 @@ const addData = () => {
     dialogModal.value = true;
     dialogTitle.value = "Add Menu"
     data.value = {
-        kode: "",
-        nama: "",
+        title: "",
+        modules_id: route.params.id,
+        path: "",
+        icon: "",
+        status: null,
+        parent_id: null,
     }
-}
-const saveData = () => {
-    error.value = {
-        kode: "",
-        nama: "",
-    }
-    if (data.value.kode === "" ) {
-        error.value.kode = "Kode wajib diisi"
-        return;
-    }
-    if (data.value.nama === "" ) {
-        error.value.nama = "Nama wajib diisi"
-        return;
-    }
-
-    // save item to server
-    serverItems.value.push({...data.value });
-    toast.success("Berhasil menyimpan data", {
-        position: "top-right",
-        duration: 3000,
-        theme: "colored",
-    });
-    dialogModal.value = false;
 }
 const editData = (item) => {
     dialogModal.value = true;
     dialogTitle.value = "Edit Menu"
     data.value = {...item }
+}
+
+const detailData = (item) => {
+    data.value = item
+    dialogModal.value = true;
+    dialogTitle.value = "Detail Menu"
+}
+const saveData = () => {
+    error.value = {
+        title: "",
+        modules_id: route.params.id,
+        path: "",
+        icon: "",
+        status: null,
+        parent_id: null,
+    }
+    if (data.value.title === "" ) {
+        error.value.title = "Nama wajib diisi"
+        return;
+    }
+    if (data.value.path === "" ) {
+        error.value.path = "Path wajib diisi"
+        return;
+    }
+    if (data.value.status === null ) {
+        error.value.status = "Status wajib diisi"
+        return;
+    }
+    if (data.value.icon === null ) {
+        error.value.index = "Icon wajib diisi"
+        return;
+    }
+
+    if (dialogTitle.value == "Add Menu") {
+        axios.post(`/menus`, data.value).then(result => {
+            toast.success("Berhasil menyimpan data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+            loadItems(1, itemsPerPage, 'id')
+        }).catch(err => {
+            toast.error("Error menyimpan data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+        })
+    } else {
+        axios.put(`/menus/`+data.value.id, data.value).then(result => {
+            toast.success("Berhasil mengupdate data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+            loadItems(1, itemsPerPage, 'id')
+        }).catch(err => {
+            toast.error("Error mengupdate data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+        })
+    }
+    dialogModal.value = false;
 }
 const deleteData = (item) => {
     Swal.fire({
@@ -187,17 +203,31 @@ const deleteData = (item) => {
         cancelButtonColor: "yellow", //
     }).then((result) => {
         if (result.isConfirmed) {
-            // delete item from server
-            serverItems.value = serverItems.value.filter((itm) => itm.kode!== item.kode);
-            Swal.fire("Berhasil menghapus data");
+            axios.delete(`/menus/`+item.id).then(result => {
+                toast.success("Berhasil menghapus data", {
+                    position: "top-right",
+                    duration: 3000,
+                    theme: "colored",
+                });
+            loadItems(1, itemsPerPage, 'id')
+            }).catch(err => {
+                toast.error("Error mengupdate data", {
+                    position: "top-right",
+                    duration: 3000,
+                    theme: "colored",
+                });
+            })
         }
     });
 }
-const detailData = (item) => {
-    data.value = item
-    dialogModal.value = true;
-    dialogTitle.value = "Detail Menu"
+
+function toggleChildren(item) {
+  item.showChildren = !item.showChildren;
 }
+function handleCheckboxChange() {
+    data.value.parent_id = null
+}
+
 </script>
 
 <template>
@@ -230,21 +260,24 @@ const detailData = (item) => {
                 <v-card-item>
                     <v-data-table-server 
                         v-model:items-per-page="itemsPerPage" 
-                        :headers="headers" :items="serverItems"
+                        :headers="headers" 
+                        :items="serverItems"
                         :items-length="totalItems" 
                         :loading="loading" 
                         item-value="name" 
                         @update:options="loadItems"
-                        :expanded.sync="expanded"
-                        item-key="name"
-                        show-expand
                     >
-                        <template v-slot:item="props, idx">
+                        <template v-slot:item="props">
                             <tr style="height:48px">
-                                <td>{{ props.item.kode }}</td>
-                                <td>{{ props.item.nama }}</td>
                                 <td>
-                                    <div v-if="props.item.status == '1' ">
+                                    <v-icon @click="toggleChildren(props.item)" v-if="props.item.children_recursive.length != 0">
+                                        {{ props.item.showChildren ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                                    </v-icon>
+                                </td>
+                                <td>{{ props.item.title }}</td>
+                                <td>{{ props.item.path }}</td>
+                                <td>
+                                    <div v-if="props.item.status == 1 ">
                                         <v-chip color="green" class="bg-green" density="compact" variant="flat">
                                             Active
                                         </v-chip>
@@ -256,13 +289,6 @@ const detailData = (item) => {
                                     </div>
                                 </td>
                                 <td class="btn-td">
-                                    <router-link 
-                                        to="/setting/menu/detail/123"
-                                        class="btn-explore-route" 
-                                        v-tooltip="'Explore'"
-                                    >
-                                        <v-icon color="white">mdi-rocket-launch-outline</v-icon>
-                                    </router-link>
                                     <button 
                                         class="btn-detail" 
                                         v-tooltip="'Detail'"
@@ -286,21 +312,48 @@ const detailData = (item) => {
                                     </button>
                                 </td>
                             </tr>
-                        </template>
-
-                        <template v-slot:expanded-item="{ item }">   
-                            <td>
-                            <p v-for="source in item.children">{{ source.kode }}</p>
-                            </td>
-                            <td>
-                            <p v-for="source in item.children">{{ source.nama }}</p>
-                            </td>
-                            <td>
-                            <p v-for="source in item.children">{{ source.status }}</p>
-                            </td>
-                            <td>
-                            <p v-for="source in item.children">{{ source.path }}</p>
-                            </td>
+                            <template v-if="props.item.showChildren">
+                                <tr style="height:48px;background-color: #f5f5f5" v-for="(subItem, idx) in props.item.children_recursive" :key="idx">
+                                    <td></td>
+                                    <td style="padding-left: 40px;">{{ subItem.title }}</td>
+                                    <td>{{ subItem.path }}</td>
+                                    <td>
+                                        <div v-if="subItem.status == 1 ">
+                                            <v-chip color="green" class="bg-green" density="compact" variant="flat">
+                                                Active
+                                            </v-chip>
+                                        </div>
+                                        <div v-if="subItem.status == '0' ">
+                                            <v-chip color="red" class="bg-red" density="compact" variant="flat">
+                                                Inactive
+                                            </v-chip>
+                                        </div>
+                                    </td>
+                                    <td class="btn-td">
+                                        <button 
+                                            class="btn-detail" 
+                                            v-tooltip="'Detail'"
+                                            @click="detailData(subItem)"
+                                        >
+                                            <v-icon color="white">mdi-file</v-icon>
+                                        </button>
+                                        <button 
+                                            class="btn-edit"
+                                            v-tooltip="'Edit'"
+                                            @click="editData(subItem)"
+                                        >
+                                            <v-icon color="white">mdi-pencil</v-icon>
+                                        </button>
+                                        <button 
+                                            class="btn-delete"
+                                            v-tooltip="'Delete'"
+                                            @click="deleteData(subItem)"
+                                        >
+                                            <v-icon color="white">mdi-delete</v-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
                         </template>
                     </v-data-table-server>
                 </v-card-item>
@@ -324,34 +377,43 @@ const detailData = (item) => {
                     <v-divider :class="dialogTitle=='Detail Menu'?'':'mb-4'"></v-divider>
 
                     <v-card-text v-if="dialogTitle=='Detail Menu'">
-                        <DetailRow :name="'Kode'" :value="data.kode"/>
-                        <DetailRow :name="'Name'" :value="data.nama"/>
+                        <DetailRow :name="'Nama Menu'" :value="data.title"/>
+                        <DetailRow :name="'Url'" :value="data.path"/>
+                        <DetailRow :name="'Status'" :value="data.status == 1 ? 'Active':'Inactive'"/>
                     </v-card-text>
                     <v-card-text v-else>
                         <v-text-field 
-                            v-model="data.kode" 
-                            label="Kode" 
+                            v-model="data.title"
                             density="compact"
                             variant="outlined" 
-                            :error-messages="error.kode"
+                            :error-messages="error.title"
                         >
                             <template v-slot:label>
-                                Kode<span class="text-red">*</span>
+                                Nama Menu<span class="text-red">*</span>
                             </template>
                         </v-text-field>
                         <v-text-field 
-                            v-model="data.nama" 
-                            label="Nama" 
+                            v-model="data.path" 
                             density="compact"
                             variant="outlined" 
-                            :error-messages="error.nama"
+                            :error-messages="error.path"
                         >
                             <template v-slot:label>
-                                Nama<span class="text-red">*</span>
+                                Path<span class="text-red">*</span>
+                            </template>
+                        </v-text-field>
+                        <v-text-field 
+                            v-model="data.icon" 
+                            density="compact"
+                            variant="outlined" 
+                            :error-messages="error.icon"
+                        >
+                            <template v-slot:label>
+                                Icon<span class="text-red">*</span>
                             </template>
                         </v-text-field>
                         <v-autocomplete
-                            v-model="statuses"
+                            v-model="data.status"
                             :items="status_items"
                             item-title="text"
                             item-value="value"
@@ -360,6 +422,36 @@ const detailData = (item) => {
                         >
                             <template v-slot:label>
                                 Status<span class="text-red">*</span>
+                            </template>
+                        </v-autocomplete>
+                        <!-- <v-autocomplete
+                            v-model="data.index"
+                            :items="index_items"
+                            item-title="text"
+                            item-value="value"
+                            density="compact"
+                            variant="outlined"
+                        >
+                            <template v-slot:label>
+                                Index<span class="text-red">*</span>
+                            </template>
+                        </v-autocomplete> -->
+                        <v-checkbox 
+                            label="Is Parent" 
+                            v-model:model-value="isParent"
+                            @change="handleCheckboxChange"
+                        ></v-checkbox>
+                        <v-autocomplete
+                            v-model="data.parent_id"
+                            :items="parent_items"
+                            item-title="text"
+                            item-value="value"
+                            density="compact"
+                            variant="outlined"
+                            :disabled="isParent"
+                        >
+                            <template v-slot:label>
+                                Parent<span class="text-red">*</span>
                             </template>
                         </v-autocomplete>
                     </v-card-text>
