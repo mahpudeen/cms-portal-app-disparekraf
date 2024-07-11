@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script>
 import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
 
@@ -334,7 +334,7 @@ function validateForm() {
               <v-card-text>{{ validationMessage }}</v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="green darken-1" text @click="dialog = false">OK</v-btn>
+                <v-btn color="green darken-1" @click="dialog = false">OK</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -377,7 +377,7 @@ function validateForm() {
         <v-card-text>{{ validationMessage }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="green darken-1" text @click="dialog = false">OK</v-btn>
+          <v-btn color="green darken-1" @click="dialog = false">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
