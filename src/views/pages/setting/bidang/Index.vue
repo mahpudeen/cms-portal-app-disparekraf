@@ -1,92 +1,69 @@
 <script setup>
-import { ref, inject } from 'vue';
+import { ref, inject, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DetailRow from '@/components/DetailRow.vue';
-const search = ref('');
+import axios from '@/plugins/axios';
 
 const Swal = inject('$swal')
 
-const bidang = [
+const status_items = [
     {
-        "kode": "PP",
-        "nama": "Dinas Promosi dan Pemasaran Pariwisata"
+        "value": 1,
+        "text": "Active",
     },
     {
-        "kode": "PPP",
-        "nama": "Dinas Pengembangan Produk Pariwisata"
-    },
-    {
-        "kode": "PDW",
-        "nama": "Dinas Pengelolaan Destinasi Wisata"
+        "value": 0,
+        "text": "Inactive",
     }
 ];
 
-const FakeAPI = {
-    async fetch({ page, itemsPerPage, sortBy }) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const start = (page - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                const items = bidang.slice();
-
-                if (sortBy.length) {
-                    const sortKey = sortBy[0].key;
-                    const sortOrder = sortBy[0].order;
-                    items.sort((a, b) => {
-                        const aValue = a[sortKey];
-                        const bValue = b[sortKey];
-                        return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
-                    });
-                }
-
-                const paginated = items.slice(start, end);
-
-                resolve({ items: paginated, total: items.length });
-            }, 500);
-        });
-    },
-};
-
-const itemsPerPage = ref(5);
 const headers = ref([
     {
-        title: 'Kode',
-        width: "20%",
+        title: 'ID',
         class: 'grey--text text--darken-4',
-        sortable: false,
+        sortable: false
     },
     {
-        title: 'Nama',
+        title: 'Nama Bidang',
+        class: 'grey--text text--darken-4',
+        sortable: false
+    },
+    {
+        title: 'Status',
         class: 'grey--text text--darken-4',
         sortable: false
     },
     {
         title: 'Action',
-        width: "12%",
+        width: "18%",
         align: 'center',
         sortable: false
     },
 ]);
 const serverItems = ref([]);
+const index_items = ref([]);
 const loading = ref(true);
+const itemsPerPage = ref(10);
 const totalItems = ref(0);
+const search = ref('');
 
-const loadItems = ({ page, itemsPerPage, sortBy }) => {
+const loadItems = async ({ page, itemsPerPage, sortBy }) => {
     loading.value = true;
-    FakeAPI.fetch({ page, itemsPerPage, sortBy }).then(({ items, total }) => {
-        serverItems.value = items;
-        totalItems.value = total;
+    axios.get(`/bidang`).then(result => {
+        console.log(result);
+        serverItems.value = result.data.data
+        totalItems.value = result.data.data.length;
         loading.value = false;
-    });
+    })
 };
 
 const data = ref({
-    kode: "",
-    nama: "",
+    name: "",
+    status: null,
 })
 const error = ref({
-    kode: "",
-    nama: "",
+    name: "",
+    status: null,
 })
 const dialogModal = ref(false);
 const dialogTitle = ref('');
@@ -95,37 +72,69 @@ const addData = () => {
     dialogModal.value = true;
     dialogTitle.value = "Add Bidang"
     data.value = {
-        kode: "",
-        nama: "",
+        name: "",
+        status: null,
     }
-}
-const saveData = () => {
-    error.value = {
-        kode: "",
-        nama: "",
-    }
-    if (data.value.kode === "" ) {
-        error.value.kode = "Kode wajib diisi"
-        return;
-    }
-    if (data.value.nama === "" ) {
-        error.value.nama = "Nama wajib diisi"
-        return;
-    }
-
-    // save item to server
-    serverItems.value.push({...data.value });
-    toast.success("Berhasil menyimpan data", {
-        position: "top-right",
-        duration: 3000,
-        theme: "colored",
-    });
-    dialogModal.value = false;
 }
 const editData = (item) => {
     dialogModal.value = true;
     dialogTitle.value = "Edit Bidang"
     data.value = {...item }
+}
+
+const detailData = (item) => {
+    data.value = item
+    dialogModal.value = true;
+    dialogTitle.value = "Detail Bidang"
+}
+const saveData = () => {
+    error.value = {
+        name: "",
+        status: null,
+    }
+    console.log(data.value)
+    if (data.value.name === "" ) {
+        error.value.name = "Nama wajib diisi"
+        return;
+    }
+    if (data.value.status === null &&  dialogTitle=='Edit Bidang') {
+        error.value.status = "Status wajib diisi"
+        return;
+    }
+
+    if (dialogTitle.value == "Add Bidang") {
+        axios.post(`/bidang`, data.value).then(result => {
+            toast.success("Berhasil menyimpan data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+            loadItems(1, itemsPerPage, 'id')
+        }).catch(err => {
+            toast.error("Error menyimpan data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+        })
+    } else {
+        data.value.status = String(data.value.status)
+        axios.put(`/bidang/`+data.value.id, data.value).then(result => {
+            toast.success("Berhasil mengupdate data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+            loadItems(1, itemsPerPage, 'id')
+        }).catch(err => {
+            toast.error("Error mengupdate data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+        })
+    }
+    dialogModal.value = false;
 }
 const deleteData = (item) => {
     Swal.fire({
@@ -133,20 +142,29 @@ const deleteData = (item) => {
         text: "Apakah anda yakin ingin menghapus?",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#DD6B55",
+        confirmButtonColor: "orange",
+        confirmButtonTextColor: "orange",
         confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        cancelButtonColor: "yellow", //
     }).then((result) => {
         if (result.isConfirmed) {
-            // delete item from server
-            serverItems.value = serverItems.value.filter((itm) => itm.kode!== item.kode);
-            Swal.fire("Berhasil menghapus data");
+            axios.delete(`/bidang/`+item.id).then(result => {
+                toast.success("Berhasil menghapus data", {
+                    position: "top-right",
+                    duration: 3000,
+                    theme: "colored",
+                });
+            loadItems(1, itemsPerPage, 'id')
+            }).catch(err => {
+                toast.error("Error mengupdate data", {
+                    position: "top-right",
+                    duration: 3000,
+                    theme: "colored",
+                });
+            })
         }
     });
-}
-const detailData = (item) => {
-    data.value = item
-    dialogModal.value = true;
-    dialogTitle.value = "Detail Bidang"
 }
 </script>
 
@@ -180,7 +198,8 @@ const detailData = (item) => {
                 <v-card-item>
                     <v-data-table-server 
                         v-model:items-per-page="itemsPerPage" 
-                        :headers="headers" :items="serverItems"
+                        :headers="headers" 
+                        :items="serverItems"
                         :items-length="totalItems" 
                         :loading="loading" 
                         item-value="name" 
@@ -188,8 +207,20 @@ const detailData = (item) => {
                     >
                         <template v-slot:item="props, idx">
                             <tr style="height:48px">
-                                <td>{{ props.item.kode }}</td>
-                                <td>{{ props.item.nama }}</td>
+                                <td>{{ props.item.id }}</td>
+                                <td>{{ props.item.name }}</td>
+                                <td>
+                                    <div v-if="props.item.status == 1 ">
+                                        <v-chip color="green" class="bg-green" density="compact" variant="flat">
+                                            Active
+                                        </v-chip>
+                                    </div>
+                                    <div v-if="props.item.status == '0' ">
+                                        <v-chip color="red" class="bg-red" density="compact" variant="flat">
+                                            Inactive
+                                        </v-chip>
+                                    </div>
+                                </td>
                                 <td class="btn-td">
                                     <button 
                                         class="btn-detail" 
@@ -237,24 +268,33 @@ const detailData = (item) => {
                     <v-divider :class="dialogTitle=='Detail Bidang'?'':'mb-4'"></v-divider>
 
                     <v-card-text v-if="dialogTitle=='Detail Bidang'">
-                        <DetailRow :name="'Kode'" :value="data.kode"/>
-                        <DetailRow :name="'Name'" :value="data.nama"/>
+                        <DetailRow :name="'Nama Bidang'" :value="data.name"/>
+                        <DetailRow :name="'Status'" :value="data.status == 1 ? 'Active':'Inactive'"/>
                     </v-card-text>
                     <v-card-text v-else>
                         <v-text-field 
-                            v-model="data.kode" 
-                            label="Kode" 
+                            v-model="data.name"
                             density="compact"
                             variant="outlined" 
-                            :error-messages="error.kode"
-                        ></v-text-field>
-                        <v-text-field 
-                            v-model="data.nama" 
-                            label="Nama" 
+                            :error-messages="error.name"
+                        >
+                            <template v-slot:label>
+                                Nama Bidang<span class="text-red">*</span>
+                            </template>
+                        </v-text-field>
+                        <v-autocomplete
+                            v-model="data.status"
+                            :items="status_items"
+                            item-title="text"
+                            item-value="value"
                             density="compact"
-                            :error-messages="error.nama"
-                            variant="outlined" 
-                        ></v-text-field>
+                            v-if="dialogTitle=='Edit Bidang'"
+                            variant="outlined"
+                        >
+                            <template v-slot:label>
+                                Status<span class="text-red">*</span>
+                            </template>
+                        </v-autocomplete>
                     </v-card-text>
 
                     <v-divider class="mt-2"></v-divider>
