@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, inject } from 'vue';
-import axios from 'axios';
+import { ref, inject } from 'vue';
+import axios from '@/plugins/axios';
 import DetailRow from '@/components/DetailRow.vue';
 
 const Swal = inject('$swal');
@@ -11,6 +11,7 @@ const totalItems = ref(0);
 const search = ref('');
 const roleList = ref([]);
 const bidangList = ref([]);
+const loading = ref(false);
 const usersHeader = [
   { title: 'Nama', value: 'nama_lengkap' },
   { title: 'NRK', value: 'nrk' },
@@ -54,37 +55,46 @@ const error = ref({
 const dialogModal = ref(false);
 const dialogTitle = ref('');
 
+const fetchTableData = async (options) => {
+  loading.value = true;
+  try {
+    const params = {
+      page: options.page || 1,
+      limit: options.itemsPerPage || 10,
+      sortBy: options.sortBy ? options.sortBy[0] : undefined,
+      sortDesc: options.sortDesc ? options.sortDesc[0] : undefined
+    };
+
+    const [rolesResponse, bidangResponse, usersResponse] = await Promise.all([
+      axios.get('/roles'),
+      axios.get('/bidang'),
+      axios.get('/user', { params })
+    ]);
+
+    const roles = rolesResponse.data;
+    roleList.value = rolesResponse.data;
+    const bidang = bidangResponse.data.data;
+    bidangList.value = bidangResponse.data.data;
+    const usersData = usersResponse.data.data
+
+    const rolesMap = new Map(roles.map(role => [role.id, role.name]));
+    const bidangMap = new Map(bidang.map(b => [b.id, b.name]));
+
+    users.value = usersData.map(user => ({
+      ...user,
+      role_name: rolesMap.get(parseInt(user.role_id)) || null,
+      bidang_name: bidangMap.get(parseInt(user.bidang_id)) || null,
+    }));
+
+    totalItems.value = usersResponse.data.totalItems || users.value.length;
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
 const userAPI = {
-  async fetchUsers() {
-    try {
-      // TODO: Need to put on env file, dont use hardcode
-      const response = await fetch('http://sso.sanctum.my.id/api/user', {
-        method: 'GET',
-        headers: {
-          'X-Channel': 'disparekraf_api',
-          Authorization: `Bearer 3|ocvzaHGgxQdkqgfAveJ49RgWKfeQONouNuIXI4Fs89b20484`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const filteredData = data.map((user) => {
-        const filteredUser = { id: user.id };
-        usersHeader.forEach((header) => {
-          filteredUser[header.value] = user[header.value];
-        });
-        return filteredUser;
-      });
-      totalItems.value = filteredData.length;
-      return filteredData;
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-      throw error;
-    }
-  },
   async fetchUserById(userId) {
     try {
       // TODO: Need to put on env file, dont use hardcode
@@ -123,79 +133,7 @@ const userAPI = {
       throw error;
     }
   },
-  async fetchRolesNames() {
-    const url = 'http://sso.sanctum.my.id/api/roles';
-    const headers = {
-      'X-Channel': 'disparekraf_api',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Bearer 3|ocvzaHGgxQdkqgfAveJ49RgWKfeQONouNuIXI4Fs89b20484'
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      const roles = data.map((role) => ({
-        id: role.id,
-        name: role.name
-      }));
-      return roles;
-    } catch (error) {
-      console.error('There was an error!', error);
-      return []; // Ensure a value is returned even in case of error
-    }
-  },
-  // fungsi fetch bidang
-  async fetchBidangNames() {
-    const url = 'http://sso.sanctum.my.id/api/bidang';
-    const headers = {
-      'X-Channel': 'disparekraf_api',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Bearer 3|ocvzaHGgxQdkqgfAveJ49RgWKfeQONouNuIXI4Fs89b20484'
-    };
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: headers
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.data;
-    } catch (error) {
-      console.error('There was an error!', error);
-    }
-  }
 };
-
-onMounted(async () => {
-  const fetchedUsers = await userAPI.fetchUsers();
-  bidangList.value = await userAPI.fetchBidangNames();
-  roleList.value = await userAPI.fetchRolesNames();
-  const mappedUsers = fetchedUsers.map((user) => {
-    const roleId = parseInt(user.role_id);
-    const bidangId = parseInt(user.bidang_id);
-    const userRole = roleList.value.find((role) => role.id === roleId);
-    const userBidang = bidangList.value.find((bidang) => bidang.id === bidangId);
-    user.role_name = userRole ? userRole.name : null;
-    user.bidang_name = userBidang ? userBidang.name : null;
-    return user;
-  });
-  users.value = mappedUsers;
-  itemsPerPage.value = Math.min(5, users.value.length);
-});
 
 const addData = () => {
   dialogModal.value = true;
@@ -236,21 +174,41 @@ const saveData = () => {
     isValid = false;
   }
   if (isValid) {
-    console.log('saved Data:', data.value);
     currentData.value = { ...data.value };
+    if (dialogTitle.value === 'Add User') {
+      // Add new user
+      axios({
+        method: 'post',
+        url: 'http://sso.sanctum.my.id/api/auth/register',
+        headers: {
+          'X-Channel': 'disparekraf_api',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: 'Bearer 3|ocvzaHGgxQdkqgfAveJ49RgWKfeQONouNuIXI4Fs89b20484'
+        },
+        data: new URLSearchParams(data.value).toString()
+      })
+        .then((response) => {
+          Swal.fire('Success', 'User added successfully', 'success').then(() => {
+            window.location.reload();
+          });
+          dialogModal.value = false;
+        })
+        .catch((error) => {
+          Swal.fire('Error', 'Failed to add user', 'error');
+        });
+    } else {    
     userAPI
       .updateUser(currentData.value.id, currentData.value)
       .then((response) => {
-        console.log('User updated successfully', response);
         Swal.fire('Success', 'User updated successfully', 'success').then(() => {
           window.location.reload();
         });
         dialogModal.value = false;
       })
       .catch((error) => {
-        console.error('Failed to update user', error);
         Swal.fire('Error', 'Failed to update user', 'error');
       });
+    }
   }
 };
 
@@ -288,12 +246,9 @@ const deleteData = (item) => {
         }
       })
         .then((response) => {
-          console.log(response);
           Swal.fire('Berhasil menghapus data');
         })
         .catch((error) => {
-          // Handle error
-          console.error('Error deactivating user:', error);
           Swal.fire('Gagal menghapus data', 'Terjadi kesalahan saat menonaktifkan user.', 'error');
         });
     }
@@ -327,16 +282,27 @@ const deleteData = (item) => {
         </v-card-item>
         <v-divider></v-divider>
         <v-card-item>
-          <v-data-table :headers="usersHeader" :items="users">
+          <v-data-table :headers="usersHeader" :items="users" :loading="loading"  @update:options="fetchTableData">
             <template v-slot:item="props">
               <tr style="height: 48px">
                 <td>{{ props.item.nama_lengkap }}</td>
                 <td>{{ props.item.nrk }}</td>
                 <td>{{ props.item.nip }}</td>
                 <td>{{ props.item.email }}</td>
-                <td>{{ props.item.role_name }}</td>
-                <td>{{ props.item.bidang_name }}</td>
-                <td>{{ props.item.status === 1 ? 'Aktif' : 'Tidak Aktif' }}</td>
+                <td>{{ props.item.role?.name || ''}}</td>
+                <td>{{ props.item.bidang?.name || ''}}</td>
+                <td>
+                  <div v-if="props.item.status == 1 ">
+                      <v-chip color="green" class="bg-green" density="compact" variant="flat">
+                          Active
+                      </v-chip>
+                  </div>
+                  <div v-if="props.item.status == '0' ">
+                      <v-chip color="red" class="bg-red" density="compact" variant="flat">
+                          Inactive
+                      </v-chip>
+                  </div>
+                </td>
                 <td class="btn-td">
                   <button class="btn-detail" v-tooltip="'Detail'" @click="detailData(props.item)">
                     <v-icon color="white">mdi-file</v-icon>
@@ -378,6 +344,9 @@ const deleteData = (item) => {
                 <v-text-field v-model="data.nip" label="NIP" density="compact" variant="outlined" :error="error.nip"></v-text-field>
                 <!-- <span v-if="error.email" style="color: red">{{ error.email }}</span> -->
                 <v-text-field v-model="data.email" label="Email" density="compact" variant="outlined" :error="error.email"></v-text-field>
+                <!-- dialog.title == Add User -->
+                <!-- create password -->
+                <v-text-field v-if="dialogTitle === 'Add User'" type="Password" v-model="data.password" label="Password" density="compact" variant="outlined"></v-text-field>
                 <v-text-field v-model="data.pangkat" label="Pangkat" density="compact" variant="outlined"></v-text-field>
                 <v-text-field v-model="data.jabatan" label="Jabatan" density="compact" variant="outlined"></v-text-field>
                 <v-text-field v-model="data.unit_kerja" label="Unit Kerja" density="compact" variant="outlined"></v-text-field>
