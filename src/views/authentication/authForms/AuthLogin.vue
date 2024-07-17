@@ -25,7 +25,7 @@ function validate(values: any, { setErrors }: any) {
   <Form @submit="validate" class="mt-7 loginForm" v-slot="{ errors, isSubmitting }">
     <v-text-field
       v-model="username"
-      label="Email Address / NIK"
+      label="NRK / Email"
       class="mt-4 mb-8"
       required
       density="comfortable"
@@ -58,9 +58,9 @@ function validate(values: any, { setErrors }: any) {
         class="ms-n2"
         hide-details
       ></v-checkbox>
-      <div class="ml-auto">
+      <!-- <div class="ml-auto">
         <a href="javascript:void(0)" class="text-primary text-decoration-none">Forgot password?</a>
-      </div>
+      </div> -->
     </div>
     <v-btn color="secondary" :loading="isSubmitting" block class="mt-2" variant="flat" size="large" :disabled="valid" type="submit">
       Sign In</v-btn
