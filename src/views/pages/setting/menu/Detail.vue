@@ -96,14 +96,16 @@ const data = ref({
     icon: "",
     status: null,
     parent_id: null,
+    index: null,
 })
 const error = ref({
     title: "",
-    modules_id: route.params.id,
+    modules_id: "",
     path: "",
     icon: "",
-    status: null,
-    parent_id: null,
+    status: "",
+    parent_id: "",
+    index: "",
 })
 const dialogModal = ref(false);
 const dialogTitle = ref('');
@@ -118,6 +120,7 @@ const addData = () => {
         icon: "",
         status: null,
         parent_id: null,
+        index: null,
     }
 }
 const editData = (item) => {
@@ -139,6 +142,7 @@ const saveData = () => {
         icon: "",
         status: null,
         parent_id: null,
+        index: null,
     }
     if (data.value.title === "" ) {
         error.value.title = "Nama wajib diisi"
@@ -153,12 +157,16 @@ const saveData = () => {
         return;
     }
     if (data.value.icon === null ) {
-        error.value.index = "Icon wajib diisi"
+        error.value.icon = "Icon wajib diisi"
+        return;
+    }
+    if (data.value.index === null ) {
+        error.value.index = "Index wajib diisi"
         return;
     }
 
     if (dialogTitle.value == "Add Menu") {
-        axios.post(`/menus`, data.value).then(result => {
+        axios.post(`/menus/create`, data.value).then(result => {
             toast.success("Berhasil menyimpan data", {
                 position: "top-right",
                 duration: 3000,
@@ -424,18 +432,19 @@ function handleCheckboxChange() {
                                 Status<span class="text-red">*</span>
                             </template>
                         </v-autocomplete>
-                        <!-- <v-autocomplete
+                        <v-autocomplete
                             v-model="data.index"
                             :items="index_items"
                             item-title="text"
                             item-value="value"
                             density="compact"
                             variant="outlined"
+                            :error-messages="error.index"
                         >
                             <template v-slot:label>
                                 Index<span class="text-red">*</span>
                             </template>
-                        </v-autocomplete> -->
+                        </v-autocomplete>
                         <v-checkbox 
                             label="Is Parent" 
                             v-model:model-value="isParent"
