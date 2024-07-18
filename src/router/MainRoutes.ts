@@ -30,4 +30,8 @@ const MainRoutes = {
   ]
 };
 
+import { routerSettings } from '../views/pages/setting/router';
+routerSettings.forEach(element => {
+  MainRoutes.children.push(element);
+});
 export default MainRoutes;
