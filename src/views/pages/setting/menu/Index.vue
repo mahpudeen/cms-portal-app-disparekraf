@@ -332,6 +332,7 @@ const deleteData = (item) => {
                             item-value="value"
                             density="compact"
                             variant="outlined"
+                            :error-messages="error.status"
                         >
                             <template v-slot:label>
                                 Status<span class="text-red">*</span>
@@ -344,6 +345,7 @@ const deleteData = (item) => {
                             item-value="value"
                             density="compact"
                             variant="outlined"
+                            :error-messages="error.index"
                         >
                             <template v-slot:label>
                                 Index<span class="text-red">*</span>
