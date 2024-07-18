@@ -41,9 +41,12 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1024 * 1024, // Set the limit to 1 MB
-    target: 'esnext'
+    target: "ES2022"
   },
   optimizeDeps: {
+    esbuildOptions: {
+      target: 'ES2022'
+    },
     exclude: ['vuetify'],
     entries: ['./src/**/*.vue']
   }
