@@ -1,19 +1,13 @@
 <script setup>
-import { ref, inject } from 'vue';
+import { ref, inject, onMounted } from 'vue';
 import axios from '@/plugins/axios';
-import DetailRow from '@/components/DetailRow.vue';
+import { toast } from 'vue3-toastify';
 import { useRoute } from 'vue-router';
 const route = useRoute();
 
 const Swal = inject('$swal');
 
 const modulHeaders = ref([
-  {
-    width: '2%',
-    title: 'ID',
-    class: 'grey--text text--darken-4',
-    sortable: false
-  },
   {
     width: '25%',
     title: 'Nama Menu',
@@ -22,7 +16,7 @@ const modulHeaders = ref([
   },
   {
     width: '25%',
-    title: 'URL',
+    title: 'Path',
     class: 'grey--text text--darken-4',
     sortable: false
   },
@@ -49,230 +43,401 @@ const modulHeaders = ref([
     title: 'Delete',
     class: 'grey--text text--darken-4',
     sortable: false
-  },
-  {
-    title: '',
-    width: '8%',
-    align: 'center',
-    sortable: false
   }
 ]);
 
-const serverItems = ref([]);
-const index_items = ref([]);
-const loading = ref(true);
-const itemsPerPage = ref(10);
-const totalItems = ref(0);
+const moduleItems = ref([]);
+const menuItems = ref([]);
+const detailItems = ref({});
+const modulId = ref(null);
+const modulSelected = ref({});
+const checkAll = ref(true);
+const updateData = ref(false);
+const dataRole = ref({
+  "role_id": route.params.id,
+  "module": []
+});
 
-const loadItems = async () => {
-  loading.value = true;
+
+const loadDetail = async (id) => {
   try {
-    const result = await axios.get(`/modules/menu/all`);
-    serverItems.value = result.data;
-    totalItems.value = result.data.length;
-    loading.value = false;
-    index_items.value = []; // Reset index_items before populating
-    for (let index = 1; index <= result.data.length; index++) {
-      index_items.value.push({
-        value: index,
-        text: index.toString()
-      });
-    }
-    // Initialize checkboxStates for each item
-    result.data.forEach((item) => {
-      if (item.children) {
-        // Assuming there's an `isSelected` property
-        selectedMenuData.value.push(item.children);
-      }
-    });
-  } catch (error) {
-    console.error('Failed to load items:', error);
-    loading.value = false;
-  }
-};
+    const result = await axios.get(`/role-menu/`+id);
+    detailItems.value = result.data.data;
 
-const data = ref([]);
-const selectedMenuData = ref([]);
+    const resultModul = await axios.get(`/modules`);
+    moduleItems.value = resultModul.data.map((item) => ({
+      value: item.id,
+      text: item.title
+    }));
 
-const addData = (item) => {
-  // Filter modules that have any menu with permissions
-  const modulesWithSelectedMenus = serverItems.value.filter((module) =>
-    module.children.some((menu) => menu.create === true || menu.read === true || menu.update === true || menu.delete === true)
-  );
-
-  if (modulesWithSelectedMenus.length > 0) {
-    // Initialize the data structure
-    data.value = {
-      role_id: route.params.id,
-      module: []
+    const data = result.data.data
+    const data2 = {
+        role_id: data.role_id,
+        module: []
     };
 
-    // Iterate over each module to process its menus
-    modulesWithSelectedMenus.forEach((module) => {
-      // Filter menus within the module that have permissions
-      const selectedMenus = module.children.filter((menu) => menu.create || menu.read || menu.update || menu.delete);
+    if (detailItems.value.module.length > 0) {
+      updateData.value = true
+    }
 
-      // Construct the module and its access array
-      const moduleAccess = {
-        module_id: module.modul_id,
-        access: selectedMenus.map((menu) => ({
-          menu_id: menu.menu_id,
-          create: menu.create ?? false,
-          read: menu.read ?? false,
-          update: menu.update ?? false,
-          delete: menu.delete ?? false
-        }))
-      };
+    detailItems.value.module.forEach(module => {
+        const newModule = {
+            module_id: module.id,
+            title: module.title,
+            access: []
+        };
 
-      // Add the module with its menus to the data structure
-      data.value.module.push(moduleAccess);
+        module.menus.forEach(menu => {
+            const newMenu = {
+                menu_id: menu.id,
+                title: menu.title,
+                path: menu.path,
+                create: menu.create,
+                read: menu.read,
+                update: menu.update,
+                delete: menu.delete,
+                children: []
+            };
+
+            menu.children_recursive.forEach(child => {
+                const newChild = {
+                    menu_id: child.id,
+                    title: child.title,
+                    path: child.path,
+                    create: child.create,
+                    read: child.read,
+                    update: child.update,
+                    delete: child.delete
+                };
+                newMenu.children.push(newChild);
+            });
+
+            newModule.access.push(newMenu);
+        });
+
+        data2.module.push(newModule);
     });
-    console.log(data.value);
-  } else {
-    console.log('No modules or menus found with the specified permissions');
+
+    dataRole.value = data2;
+
+
+  } catch (error) {
+    console.error('Failed to load items:', error);
   }
 };
-
-const saveData = () => {
-  axios
-    .post(`/role-menu`, data.value)
-    .then((result) => {
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: 'Data saved successfully'
-      });
-    })
-    .catch((err) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to save data'
-      });
-    });
+const loadMenu = async (id) => {
+  try {
+    const result = await axios.get(`/menus/bymodule/`+id);
+    console.log(result.data);
+    menuItems.value = result.data.map((item) => ({
+      menu_id: item.id,
+      title: item.title,
+      path: item.path,
+      create: true,
+      read: true,
+      update: true,
+      delete: true,
+      children: item.children_recursive.map((child) => ({
+        menu_id: child.id,
+        title: child.title,
+        path: child.path,
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+      }))
+    }));
+    console.log(menuItems)
+  } catch (error) {
+    console.error('Failed to load items:', error);
+  }
 };
-
-function toggleChildren(item) {
-  item.showChildren = !item.showChildren;
+const handleModuleUpdate = (value) => {
+  modulSelected.value = moduleItems.value.find(item => item.value === value);
+  loadMenu(value)
 }
+const changeCheckBox = (value) => {
+  menuItems.value.forEach(element => {
+    element.create = value
+    element.read = value
+    element.update = value
+    element.delete = value
+    if (element.children.length > 0) {
+      element.children.forEach(child => {
+        child.create = value
+        child.read = value
+        child.update = value
+        child.delete = value
+      });
+    }
+  });
+}
+const addData = () => {
+  const newRoleMenu = menuItems.value
+  const newModule = {
+    "module_id": modulId.value,
+    "title": modulSelected.value.text,
+    "access": newRoleMenu
+  };
+
+  // Find the index of the existing module with the same module_id
+  const existingModuleIndex = dataRole.value.module.findIndex(module => module.module_id === modulId.value);
+
+  if (existingModuleIndex !== -1) {
+    // If a module with the same module_id exists, replace it
+    dataRole.value.module[existingModuleIndex] = newModule;
+  } else {
+    // If no such module exists, push the new module
+    dataRole.value.module.push(newModule);
+  }
+  modulId.value = null;
+  menuItems.value = []
+  modulSelected.value = {}
+  console.log(dataRole.value);
+}
+const deleteData = (item) => {
+  const newRoleMenu = menuItems.value.filter(item => item.menu_id!== item.menu_id);
+  dataRole.value.module.forEach((module, index) => {
+    if (module.module_id === item.module_id) {
+      dataRole.value.module.splice(index, 1);
+    }
+  });
+  menuItems.value = newRoleMenu;
+}
+
+const editData = (item) => {
+  modulId.value = item.module_id;
+  modulSelected.value = moduleItems.value.find(module => module.value === item.module_id);
+  menuItems.value = JSON.parse(JSON.stringify(item.access))
+}
+
+const saveData = async () => {
+  Swal.fire({
+        title: "Assign Modul",
+        text: "Apakah anda yakin ingin assign role?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "orange",
+        confirmButtonTextColor: "orange",
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        cancelButtonColor: "yellow", //
+    }).then((result) => {
+      if (result.isConfirmed) {
+        if (updateData.value) {
+          axios.put(`/role-menu/`+route.params.id, dataRole.value).then(result => {
+            toast.success("Berhasil assign data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+          }).catch(err => {
+            toast.error("Error assign data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+          })
+        } else {
+          axios.post(`/role-menu`, dataRole.value).then(result => {
+            toast.success("Berhasil assign data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+          }).catch(err => {
+            toast.error("Error assign data", {
+                position: "top-right",
+                duration: 3000,
+                theme: "colored",
+            });
+          })
+        }
+      }
+    });
+}
+onMounted(() => {
+  loadDetail(route.params.id)
+})
 </script>
 <template>
   <v-row>
     <v-col cols="12" md="12">
-      <v-card variant="flat">
+      <v-card>
         <v-card-item>
           <div class="d-sm-flex align-center justify-space-between">
             <v-row>
-              <v-col cols="12" sm="4"></v-col>
+              <v-col cols="12" sm="4">
+                <h2 class="">Pilih modul dan assign</h2>
+              </v-col>
             </v-row>
             <slot name="action">
-              <v-btn prepend-icon="mdi-content-save" color="primary" elevation="0" @click="saveData"> Save </v-btn>
+              <v-btn prepend-icon="mdi-content-save" color="primary" elevation="0" @click="saveData"> Assign </v-btn>
             </slot>
           </div>
         </v-card-item>
         <v-divider></v-divider>
         <v-card-item>
-          <DetailRow :name="'Nama Role'" :value="roleName" />
-          <v-data-table-server
-            v-model:items-per-page="itemsPerPage"
-            :headers="modulHeaders"
-            :items="serverItems"
-            :items-length="totalItems"
-            :loading="loading"
-            item-value="name"
-            @update:options="loadItems"
-          >
+          <v-col class="p-0">
+            Nama Role : {{ detailItems.role_name }}
+          </v-col>
+          <v-row class="mt-4">
+          <v-col cols="12" md="4">
+            <v-autocomplete
+              v-model="modulId"
+              :items="moduleItems"
+              label="Pilih Modul"
+              placeholder="Pilih Modul"
+              density="compact"
+              variant="outlined"
+              item-title="text"
+              item-value="value"
+              clearable
+              @update:model-value="handleModuleUpdate"
+            ></v-autocomplete>
+          </v-col>
+
+          <v-col cols="5" class="p-1" v-if="menuItems.length > 0">
+              <v-checkbox v-model="checkAll" label="Check/Uncheck All" @update:model-value="changeCheckBox"></v-checkbox>
+            </v-col>
+            
+          </v-row>
+          <div>
+            <v-data-table
+              :headers="modulHeaders"
+              :items="menuItems"
+              :no-data-text="'Data tidak tersedia, pilih modul terlebih dahulu'"
+            >
             <template v-slot:item="props">
-              <tr style="height: 48px">
-                <td>{{ props.item.modul_id }}</td>
-                <td>{{ props.item.modul_title }}</td>
-                <td>{{ props.item.modul_url }}</td>
-                <td>
-                  <v-checkbox v-if="props.item.create" v-model="props.item.create"></v-checkbox>
-                </td>
-                <td>
-                  <v-checkbox v-if="props.item.read" v-model="props.item.read"></v-checkbox>
-                </td>
-                <td>
-                  <v-checkbox v-if="props.item.update" v-model="props.item.update"></v-checkbox>
-                </td>
-                <td>
-                  <v-checkbox v-if="props.item.delete" v-model="props.item.delete"></v-checkbox>
-                </td>
-                <td>
-                  <v-icon v-if="props.item.children.length > 0" @click="toggleChildren(props.item)">
-                    {{ props.item.showChildren ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-                  </v-icon>
-                </td>
-              </tr>
-              <tr v-if="props.item.showChildren" v-for="child in props.item.children" :key="child.menu_id">
-                <td></td>
-                <td>{{ child.menu_title }}</td>
-                <td>{{ child.menu_path }}</td>
-                <td>
-                  <v-checkbox v-model="child.create"></v-checkbox>
-                </td>
-                <td>
-                  <v-checkbox v-model="child.read"></v-checkbox>
-                </td>
-                <td>
-                  <v-checkbox v-model="child.update"></v-checkbox>
-                </td>
-                <td>
-                  <v-checkbox v-model="child.delete"></v-checkbox>
-                </td>
-                <td>
-                  <v-icon v-if="child.children.length > 0" @click="toggleChildren(child)">
-                    {{ child.showChildren ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-                  </v-icon>
-                </td>
-              </tr>
-            </template>
-            <template #bottom></template>
-          </v-data-table-server>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" @click="addData">Add</v-btn>
-          </v-card-actions>
+                <tr style="height: 48px">
+                  <td>{{ props.item.title }}</td>
+                  <td>{{ props.item.path }}</td>
+                  <td>
+                    <v-checkbox v-model="props.item.create"></v-checkbox>
+                  </td>
+                  <td>
+                    <v-checkbox v-model="props.item.read"></v-checkbox>
+                  </td>
+                  <td>
+                    <v-checkbox v-model="props.item.update"></v-checkbox>
+                  </td>
+                  <td>
+                    <v-checkbox v-model="props.item.delete"></v-checkbox>
+                  </td>
+                </tr>
+                <tr v-if="props.item.children" v-for="child in props.item.children" style="height: 48px;background-color: #f5f5f5" :key="child.menu_id">
+                    <td style="padding-left: 40px;">{{ child.title }}</td>
+                    <td>{{ child.path }}</td>
+                    <td>
+                      <v-checkbox v-model="child.create"></v-checkbox>
+                    </td>
+                    <td>
+                      <v-checkbox v-model="child.read"></v-checkbox>
+                    </td>
+                    <td>
+                      <v-checkbox v-model="child.update"></v-checkbox>
+                    </td>
+                    <td>
+                      <v-checkbox v-model="child.delete"></v-checkbox>
+                    </td>
+                </tr>
+              </template>
+              <template #bottom></template>
+            </v-data-table>
+          </div>
+          <v-row v-if="menuItems.length > 0">
+            <v-col cols="2" >
+              <v-btn color="primary" variant="outlined" @click="addData">Add</v-btn>
+            </v-col>
+          </v-row>
         </v-card-item>
       </v-card>
     </v-col>
   </v-row>
   <v-row>
     <v-col cols="12">
-      <div v-for="(item, index) in data.module" :key="`role-${index}`">
-        <v-card class="mt-3">
+      <v-card class="mt-3" variant="flat">
+          <v-card-text>
+            <h2>
+              List modul yang di Assign ke role '{{ detailItems.role_name }}' :
+            </h2>
+          </v-card-text>
+      </v-card>
+      <div v-for="(item, index) in dataRole.module" :key="`role-${index}`">
+        <v-card class="mt-3" variant="flat">
           <v-card-text>
             <v-row>
               <v-col cols="12">
-                <div>Module ID: {{ item.module_id }}</div>
-                <!-- Assuming item has an access object with properties -->
-                <!-- <v-text-field v-model="item.module_id" label="Module ID" dense></v-text-field> -->
-                <div v-for="subItem in item.access" :key="`access-${index}`">
-                  <v-row>
-                    <v-col cols="12" sm="2">
-                      <div>Menu ID {{ subItem.menu_id }}</div>
-                    </v-col>
-                    <v-col cols="12" sm="2">
-                      <v-checkbox :label="`Create`" v-model="subItem.create"></v-checkbox>
-                    </v-col>
-                    <v-col cols="12" sm="2">
-                      <v-checkbox :label="`Read`" v-model="subItem.read"></v-checkbox>
-                    </v-col>
-                    <v-col cols="12" sm="2">
-                      <v-checkbox :label="`Update`" v-model="subItem.update"></v-checkbox>
-                    </v-col>
-                    <v-col cols="12" sm="2">
-                      <v-checkbox :label="`Delete`" v-model="subItem.delete"></v-checkbox>
-                    </v-col>
-                  </v-row>
+                <v-row>
+                  <v-col>
+                    <h2 class=" pb-4">- Modul: {{ item.title }}</h2>
+                  </v-col>
+                  <v-spacer></v-spacer>
+
+                  <button 
+                      class="btn-edit mr-2"
+                      v-tooltip="'Edit'"
+                      @click="editData(item)"
+                  >
+                      <v-icon color="white">mdi-pencil</v-icon>
+                  </button>
+                  <button 
+                      class="btn-delete mr-3"
+                      v-tooltip="'Delete'"
+                      @click="deleteData(item)"
+                  >
+                      <v-icon color="white">mdi-delete</v-icon>
+                  </button>
+                </v-row>
+                <v-divider></v-divider>
+                <div>
+                  <v-data-table
+                    :headers="modulHeaders"
+                    :items="item.access"
+                  >
+                  <template v-slot:item="props">
+                      <tr style="height: 48px">
+                        <td>{{ props.item.title }}</td>
+                        <td>{{ props.item.path }}</td>
+                        <td>
+                          <v-checkbox disabled v-model="props.item.create"></v-checkbox>
+                        </td>
+                        <td>
+                          <v-checkbox disabled v-model="props.item.read"></v-checkbox>
+                        </td>
+                        <td>
+                          <v-checkbox disabled v-model="props.item.update"></v-checkbox>
+                        </td>
+                        <td>
+                          <v-checkbox disabled v-model="props.item.delete"></v-checkbox>
+                        </td>
+                      </tr>
+                      <tr v-if="props.item.children" v-for="child in props.item.children" style="height: 48px;background-color: #f5f5f5" :key="child.menu_id">
+                          <td style="padding-left: 40px;">{{ child.title }}</td>
+                          <td>{{ child.path }}</td>
+                          <td>
+                            <v-checkbox disabled v-model="child.create"></v-checkbox>
+                          </td>
+                          <td>
+                            <v-checkbox disabled v-model="child.read"></v-checkbox>
+                          </td>
+                          <td>
+                            <v-checkbox disabled v-model="child.update"></v-checkbox>
+                          </td>
+                          <td>
+                            <v-checkbox disabled v-model="child.delete"></v-checkbox>
+                          </td>
+                      </tr>
+                    </template>
+                    <template #bottom></template>
+                  </v-data-table>
                 </div>
-                <!-- <v-btn color="error" @click="deleteSelectedData">Delete Selected</v-btn> -->
               </v-col>
             </v-row>
           </v-card-text>
         </v-card>
       </div>
+      <pre>{{ dataRole }}</pre>
     </v-col>
   </v-row>
 </template>

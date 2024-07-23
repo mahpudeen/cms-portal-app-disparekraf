@@ -27,8 +27,13 @@ const headers = ref([
         sortable: false
     },
     {
-        width: "40%",
+        width: "30%",
         title: 'Nama Menu',
+        class: 'grey--text text--darken-4',
+        sortable: false
+    },
+    {
+        title: 'Icon Menu',
         class: 'grey--text text--darken-4',
         sortable: false
     },
@@ -283,6 +288,7 @@ function handleCheckboxChange() {
                                     </v-icon>
                                 </td>
                                 <td>{{ props.item.title }}</td>
+                                <td>{{ props.item.icon }}</td>
                                 <td>{{ props.item.path }}</td>
                                 <td>
                                     <div v-if="props.item.status == 1 ">
