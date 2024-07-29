@@ -36,7 +36,7 @@ const items = ref([
                           src="/img/jaya-raya-logo.png"
                         ></v-img>
                         <!-- <Logo /> -->
-                        <h2 class="text-facebook text-h2">CMS Portal</h2>
+                        <h2 class="text-facebook text-h2">CMS Internal</h2>
                         <h4 class="text-h4 mt-1">Dinas Pariwisata dan Ekonomi Kreatif <br> Provinsi DKI Jakarta</h4>
 
                         <!---Left Part Form-->
