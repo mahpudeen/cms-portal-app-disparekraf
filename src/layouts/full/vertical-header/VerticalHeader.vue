@@ -1,18 +1,60 @@
-<script setup lang="ts">
+<script setup>
 import { useCustomizerStore } from '../../../stores/customizer';
+import { usePermissionStore } from '@/stores/permission';
+import { useAuthStore } from '@/stores/auth';
+
 import { SettingsIcon, Menu2Icon } from 'vue-tabler-icons';
 import { ref, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { useDisplay } from 'vuetify'
 
+const permission = usePermissionStore()
+const { menu } = useAuthStore();
+
 const { mobile } = useDisplay()
 const route = useRoute();
 const title = ref(route.meta.title);
-const breadcrumbs:any = ref(route.meta.breadcrumbs);
+const breadcrumbs = ref(route.meta.breadcrumbs);
 
+const setPermissions = () => {
+  let defPermission = {
+    read: false,
+    create: false,
+    delete: false,
+    update: false,
+  }
+  if (menu && menu.length > 0) {
+    menu.forEach((item) => {
+      item.menus.forEach((sub_item) => {
+        if (sub_item.path == route.path) {
+          defPermission = {
+              read: sub_item.read,
+              create: sub_item.create,
+              delete: sub_item.delete,
+              update: sub_item.update
+          }
+        }
+        if (sub_item.children_recursive.length > 0) {
+          sub_item.children_recursive.forEach((element) => {
+            if (element.path == route.path) {
+              defPermission = {
+                  read: element.read,
+                  create: element.create,
+                  delete: element.delete,
+                  update: element.update
+              }
+            }
+          });
+        }
+      });
+    });
+  }
+  permission.setPermission(defPermission)
+}
 watchEffect(() => {
   title.value = route.meta.title;
   breadcrumbs.value = route.meta.breadcrumbs;
+  setPermissions();
 });
 
 // dropdown imports

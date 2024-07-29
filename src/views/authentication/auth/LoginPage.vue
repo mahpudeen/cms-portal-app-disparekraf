@@ -18,9 +18,9 @@ const items = ref([
     <!---Left Part-->
     <v-col cols="12" class="d-flex align-center bg-login">
       <v-container>
-        <div class="pa-7 pa-sm-12">
+        <div>
           <v-row justify="center">
-            <v-col cols="12" lg="10" xl="6" md="7">
+            <v-col cols="12">
               <v-card elevation="0" class="loginBox">
                 <v-card variant="outlined">
                   <v-card-text class="pa-6">
@@ -80,6 +80,7 @@ const items = ref([
 <style lang="scss">
 .loginBox {
   max-width: 1000px;
+  width: 100%;
   margin: 0 auto;
 }
 .bg-login {

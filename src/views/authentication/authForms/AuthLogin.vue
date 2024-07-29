@@ -8,8 +8,8 @@ const checkbox = ref(false);
 const valid = ref(false);
 const show1 = ref(false);
 //const logform = ref();
-const password = ref('admin123');
-const username = ref('admin');
+const password = ref('');
+const username = ref('');
 const passwordRules = ref([
   (v: string) => !!v || 'Password is required',
   (v: string) => (v && v.length <= 10) || 'Password must be less than 10 characters'
@@ -17,7 +17,7 @@ const passwordRules = ref([
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function validate(values: any, { setErrors }: any) {
   const authStore = useAuthStore();
-  return authStore.login(username.value, password.value).catch((error) => setErrors({ apiError: error }));
+  return authStore.login(username.value, password.value).catch((error) => setErrors({ apiError: error.response.data.message }));
 }
 </script>
 

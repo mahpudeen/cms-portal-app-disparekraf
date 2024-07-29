@@ -3,6 +3,8 @@ import { ref, inject, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DetailRow from '@/components/DetailRow.vue';
 import axios from '@/plugins/axios';
+import { usePermissionStore } from '@/stores/permission';
+const { permission } = usePermissionStore()
 
 const Swal = inject('$swal')
 
@@ -188,7 +190,7 @@ const deleteData = (item) => {
                             </v-col>
                         </v-row>
                         <slot name="action">
-                            <v-btn prepend-icon="mdi-plus-box" color="primary" elevation="0" @click="addData">
+                            <v-btn prepend-icon="mdi-plus-box" color="primary" elevation="0" @click="addData" v-if="permission.create">
                                 Add
                             </v-btn>
                         </slot>
@@ -226,6 +228,7 @@ const deleteData = (item) => {
                                         class="btn-detail" 
                                         v-tooltip="'Detail'"
                                         @click="detailData(props.item)"
+                                        v-if="permission.read"
                                     >
                                         <v-icon color="white">mdi-file</v-icon>
                                     </button>
@@ -233,12 +236,14 @@ const deleteData = (item) => {
                                         class="btn-edit"
                                         v-tooltip="'Edit'"
                                         @click="editData(props.item)"
+                                        v-if="permission.update"
                                     >
                                         <v-icon color="white">mdi-pencil</v-icon>
                                     </button>
                                     <button 
                                         class="btn-delete"
                                         v-tooltip="'Delete'"
+                                        v-if="permission.delete"
                                         @click="deleteData(props.item)"
                                     >
                                         <v-icon color="white">mdi-delete</v-icon>
