@@ -3,6 +3,8 @@ import { ref, inject, watch } from 'vue';
 import { toast } from 'vue3-toastify';
 import DetailRow from '@/components/DetailRow.vue';
 import axios from '@/plugins/axios';
+import { usePermissionStore } from '@/stores/permission';
+const { permission } = usePermissionStore()
 
 const Swal = inject('$swal')
 
@@ -26,7 +28,7 @@ const itemsPerPage = ref(10);
 const totalItems = ref(0);
 const search = ref('');
 
-const loadItems = async ({ page, itemsPerPage, sortBy }) => {
+const loadItems = async ({ page, itemsPerPage, search }) => {
     loading.value = true;
     axios.get(`/roles`).then(result => {
         serverItems.value = result.data

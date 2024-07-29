@@ -18,17 +18,17 @@ export const useAuthStore = defineStore({
   }),
   actions: {
     async login(username: string, password: string) {
-      const user:any = await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password });
-      // const user = await axios.post('https://dummyjson.com/auth/login', { username, password });
-
+      // const user:any = await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password });
+      const user:any = await axios.post('/auth/login', { "nip_or_email":username, "password": password });
+      console.log(user.data?.user);
       // update pinia state
-      this.user = user.user;
-      this.token = user.token;
-      this.menu = user.menu;
+      this.user = user.data?.user;
+      this.token = user.data?.token;
+      this.menu = user.data?.modules_menus;
       // store user details and jwt in local storage to keep user logged in between page refreshes
-      localStorage.setItem('user', JSON.stringify(user.user));
-      localStorage.setItem('token', JSON.stringify(user.token));
-      localStorage.setItem('menu', JSON.stringify(user.menu));
+      localStorage.setItem('user', JSON.stringify(user.data?.user));
+      localStorage.setItem('token', JSON.stringify(user.data?.token));
+      localStorage.setItem('menu', JSON.stringify(user.data?.modules_menus));
       // redirect to previous url or default to home page
       router.push(this.returnUrl || '/');
     },

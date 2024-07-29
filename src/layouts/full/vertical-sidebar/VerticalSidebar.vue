@@ -24,7 +24,15 @@ if (menu && menu.length > 0) {
   menu.forEach((item:any) => {
     sidebarMenu.value.push({ divider: true });
     sidebarMenu.value.push({ header: item.title });
-    item.menu.forEach((sub_item:any) => {
+    item.menus.forEach((sub_item:any) => {
+      sub_item.to = sub_item.path
+      if (sub_item.children_recursive.length > 0) {
+        sub_item.children = [];
+        sub_item.children_recursive.forEach((element:any) => {
+          element.to = element.path
+          sub_item.children.push(element)
+        });
+      }
       sidebarMenu.value.push(sub_item);
     });
   });

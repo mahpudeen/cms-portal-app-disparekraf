@@ -330,6 +330,7 @@ function handleCheckboxChange() {
                                 <tr style="height:48px;background-color: #f5f5f5" v-for="(subItem, idx) in props.item.children_recursive" :key="idx">
                                     <td></td>
                                     <td style="padding-left: 40px;">{{ subItem.title }}</td>
+                                    <td>{{ subItem.icon }}</td>
                                     <td>{{ subItem.path }}</td>
                                     <td>
                                         <div v-if="subItem.status == 1 ">

@@ -35,10 +35,15 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     // Handle error responses
-    const errorMessage = error.response?.data?.message || 'Oops! Something went wrong.';
+    const errorMessage = error.response?.data?.error || 'Oops! Something went wrong.';
     toast.error(errorMessage, {
         "theme": "colored",
     }); // Display toast with error message
+    const { logout } = useAuthStore();
+    if (error.response?.status == 401) {
+      logout()
+    }
+    console.log(error.response?.status)
     return Promise.reject(error);
 });
 
