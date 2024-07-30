@@ -20,7 +20,7 @@ export const useAuthStore = defineStore({
     async login(username: string, password: string) {
       // const user:any = await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password });
       const user:any = await axios.post('/auth/login', { "nip_or_email":username, "password": password });
-      console.log(user.data?.user);
+      console.log(user);
       // update pinia state
       this.user = user.data?.user;
       this.token = user.data?.token;

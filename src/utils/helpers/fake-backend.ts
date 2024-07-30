@@ -49,83 +49,247 @@ function fakeBackend() {
         if (!user) return error('Username or password is incorrect');
         const menu = [
           {
-            title : 'Internal Settings',
-            menu : [
+            "id": 1,
+            "title": "Internal Setting",
+            "url": "/internal-setting",
+            "status": 1,
+            "index": 1,
+            "created_at": "2024-07-17T09:16:18.000000Z",
+            "updated_at": "2024-07-17T09:16:18.000000Z",
+            "menus": [
               {
-                title: 'Users',
-                icon: 'mdi-account-circle',
-                to: '/setting/users'
+                "id": 1,
+                "title": "User",
+                "parent_id": null,
+                "modules_id": 1,
+                "path": "/setting/user",
+                "status": 1,
+                "index": 2,
+                "icon": "mdi-account-circle",
+                "created_at": "2024-07-17T09:16:18.000000Z",
+                "updated_at": "2024-07-25T07:44:10.000000Z",
+                "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                "children_recursive": []
               },
               {
-                title: 'Bidang',
-                icon: 'mdi-account-tie-outline',
-                to: '/setting/bidang'
+                "id": 2,
+                "title": "Role",
+                "parent_id": null,
+                "modules_id": 1,
+                "path": "/setting/roles",
+                "status": 1,
+                "index": 2,
+                "icon": "mdi-account-multiple",
+                "created_at": "2024-07-17T09:16:18.000000Z",
+                "updated_at": "2024-07-25T07:45:07.000000Z",
+                "create": false,
+                "read": true,
+                "update": true,
+                "delete": true,
+                "children_recursive": []
               },
               {
-                title: 'Roles',
-                icon: 'mdi-account-multiple',
-                to: '/setting/roles'
+                "id": 3,
+                "title": "Bidang",
+                "parent_id": null,
+                "modules_id": 1,
+                "path": "/setting/bidang",
+                "status": 1,
+                "index": 2,
+                "icon": "mdi-account-tie-outline",
+                "created_at": "2024-07-17T09:16:18.000000Z",
+                "updated_at": "2024-07-25T07:44:41.000000Z",
+                "create": true,
+                "read": false,
+                "update": true,
+                "delete": true,
+                "children_recursive": []
               },
               {
-                title: 'Menu',
-                icon: 'mdi-menu',
-                to: '/setting/menu'
-              },
+                "id": 4,
+                "title": "Menu",
+                "parent_id": null,
+                "modules_id": 1,
+                "path": "/setting/menu",
+                "status": 1,
+                "index": 2,
+                "icon": "mdi-menu",
+                "created_at": "2024-07-17T09:16:18.000000Z",
+                "updated_at": "2024-07-25T07:46:13.000000Z",
+                "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                "children_recursive": []
+              }
             ]
           },
           {
-            title : 'CMS Jacation',
-            menu : [
+            "id": 2,
+            "title": "CMS Jacation",
+            "url": "/jacation",
+            "status": 1,
+            "index": 1,
+            "created_at": "2024-07-17T09:16:18.000000Z",
+            "updated_at": "2024-07-25T07:47:33.000000Z",
+            "menus": [
+
               {
-                title: 'Dashboard',
-                icon: 'mdi-view-dashboard',
-                to: '/setting/users'
+                "id": 7,
+                "title": "Dashboard",
+                "parent_id": null,
+                "modules_id": 2,
+                "path": "/jacation/dashboard",
+                "status": 1,
+                "index": 5,
+                "icon": "mdi-calendar-text",
+                "created_at": "2024-07-17T13:32:27.000000Z",
+                "updated_at": "2024-07-25T07:58:55.000000Z",
+                "create": true,
+                "read": true,
+                "update": false,
+                "delete": true,
+                "children_recursive": []
               },
               {
-                title: 'Articles',
-                icon: 'mdi-post',
-                children: [
-                  {
-                    title: 'Categories',
-                    to: '/users'
-                  },
-                  {
-                    title: 'Articles',
-                    to: '/roles'
-                  },
-                  {
-                    title: 'Reviews',
-                    to: '/system'
-                  }
-                ]
+                "id": 5,
+                "title": "Artikel",
+                "parent_id": null,
+                "modules_id": 2,
+                "path": "/jacation/artikel",
+                "status": 1,
+                "index": 3,
+                "icon": "mdi-book-open-variant-outline",
+                "created_at": "2024-07-17T09:18:28.000000Z",
+                "updated_at": "2024-07-25T07:54:05.000000Z",
+                "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                "children_recursive": [
+                  
+                    {
+                        "id": 6,
+                        "title": "Artikel",
+                        "parent_id": 5,
+                        "modules_id": 2,
+                        "path": "\/jacation\/articles",
+                        "status": 1,
+                        "index": 3,
+                         "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                        "icon": "-",
+                        "created_at": "2024-07-17T10:27:32.000000Z",
+                        "updated_at": "2024-07-25T07:56:41.000000Z",
+                        "children_recursive": []
+                    },
+                    {
+                        "id": 8,
+                        "title": "Kategori",
+                        "parent_id": 5,
+                        "modules_id": 2,
+                        "path": "\/jacation\/kategori",
+                        "status": 1,
+                         "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                        "index": 3,
+                        "icon": "-",
+                        "created_at": "2024-07-25T07:56:32.000000Z",
+                        "updated_at": "2024-07-25T07:56:32.000000Z",
+                        "children_recursive": []
+                    }
+                    ]
               },
             ]
           }
         ]
         const menu2 = [
           {
-            title : 'Internal Settings',
-            menu : [
+            "id": 2,
+            "title": "CMS Jacation",
+            "url": "/jacation",
+            "status": 1,
+            "index": 1,
+            "created_at": "2024-07-17T09:16:18.000000Z",
+            "updated_at": "2024-07-25T07:47:33.000000Z",
+            "menus": [
               {
-                title: 'Users',
-                icon: 'mdi-account-circle',
-                to: '/setting/users'
+                "id": 5,
+                "title": "Artikel",
+                "parent_id": null,
+                "modules_id": 2,
+                "path": "/jacation/artikel",
+                "status": 1,
+                "index": 3,
+                "icon": "mdi-book-open-variant-outline",
+                "created_at": "2024-07-17T09:18:28.000000Z",
+                "updated_at": "2024-07-25T07:54:05.000000Z",
+                "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                "children_recursive": [
+                  
+                    {
+                        "id": 6,
+                        "title": "Artikel",
+                        "parent_id": 5,
+                        "modules_id": 2,
+                        "path": "\/jacation\/artikel",
+                        "status": 1,
+                        "index": 3,
+                         "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                        "icon": "-",
+                        "created_at": "2024-07-17T10:27:32.000000Z",
+                        "updated_at": "2024-07-25T07:56:41.000000Z",
+                        "children_recursive": []
+                    },
+                    {
+                        "id": 8,
+                        "title": "Kategori",
+                        "parent_id": 5,
+                        "modules_id": 2,
+                        "path": "\/jacation\/kategori",
+                        "status": 1,
+                         "create": true,
+                "read": true,
+                "update": true,
+                "delete": true,
+                        "index": 3,
+                        "icon": "-",
+                        "created_at": "2024-07-25T07:56:32.000000Z",
+                        "updated_at": "2024-07-25T07:56:32.000000Z",
+                        "children_recursive": []
+                    }
+                    ]
               },
               {
-                title: 'Bidang',
-                icon: 'mdi-account-tie-outline',
-                to: '/setting/bidang'
-              },
-              {
-                title: 'Roles',
-                icon: 'mdi-account-multiple',
-                to: '/setting/roles'
-              },
-              {
-                title: 'Menu',
-                icon: 'mdi-menu',
-                to: '/setting/menu'
-              },
+                "id": 7,
+                "title": "Event",
+                "parent_id": null,
+                "modules_id": 2,
+                "path": "/jacation/event",
+                "status": 1,
+                "index": 5,
+                "icon": "mdi-calendar-text",
+                "created_at": "2024-07-17T13:32:27.000000Z",
+                "updated_at": "2024-07-25T07:58:55.000000Z",
+                "create": true,
+                "read": true,
+                "update": false,
+                "delete": true,
+                "children_recursive": []
+              }
             ]
           }
         ]
@@ -134,9 +298,12 @@ function fakeBackend() {
             username: username,
           },
           token: 'disparekraf_api',
-          menu : username == 'admin'? menu:menu2
+          modules_menus : username == 'admin'? menu:menu2
         }
-        return ok(data);
+        const newData:any = {
+          data : data
+        }
+        return ok(newData);
       }
 
       function getUsers() {
