@@ -5,7 +5,7 @@ export const usePermissionStore = defineStore({
   state: () => ({
     permission: {
       read: false,
-      write: false,
+      create: false,
       delete: false,
       update: false,
     }
